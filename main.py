@@ -9,9 +9,9 @@ from elements import CA
 console = Console()
 
 #Input manual del ID del sistema para el que se va a crear el arbol
-#id = int(console.input("[bold][[cyan]+[/cyan]] Introduce el ID de sistema: [/bold]"))
+#id = console.input("[bold][[cyan]+[/cyan]] Introduce el ID de sistema: [/bold]")
 
-id = "IN10145"
+id = "IN10203"
 tree = OdooTree(id)
 
 #Arboles para outputs de consola
@@ -24,9 +24,7 @@ cacv_ptree = PTree("[bold][cyan]CACV[/cyan][/bold]")
 def print_tree():
 
     ip = odoo.network(id)
-    net_1 = ip[0]
-    net_2 = ip[1]
-    net_3 = ip[2]
+    net = str(ip[0] + "." + ip[1] + "." + ip[2] + ".")
 
     nvr = tree.nvr_tree()
     nvr_qty = len(nvr)
@@ -45,7 +43,7 @@ def print_tree():
     #NVR
     #---
     for n in range(nvr_qty):
-        nvr_ptree.add(f"[bold][green]+[/green][/bold] NVR{n+1}: " + net_1 + "." + net_2 + "." + net_3 + "." + str(nvr[n]))
+        nvr_ptree.add(f"[bold][green]+[/green][/bold] NVR{n+1}: " + net + str(nvr[n]))
 
     #-------
     #Cámaras
@@ -53,9 +51,10 @@ def print_tree():
     cam_count = 0
     cam_num = 1
     nvr_num = 1
+    print(cam_qty)
     while cam_count < cam_qty:
     #for c in range(cam_qty):
-        cam_ptree.add(f"[bold][green]+[/green][/bold] C{cam_num}N{nvr_num}: " + net_1 + "." + net_2 + "." + net_3 + "." + str(cam[cam_count]))
+        cam_ptree.add(f"[bold][green]+[/green][/bold] C{cam_num}N{nvr_num}: "+ net + str(cam[cam_count]))
         cam_num += 1
         cam_count += 1
         if cam_count == 20:
@@ -68,27 +67,24 @@ def print_tree():
     #----
     #CCAA
     #----
-    type_list = []
-    ca_count = 0
 
     for ca in range(total_ca):
         name = ccaa[f'CA{ca+1}']['Nombre']
         position = name.find('- PEATONAL')
-        type_list.append(position)
         if position != -1:
             cacp_tree = cacp_ptree.add("[bold][green]+[/green][/bold] " + str(ccaa[f'CA{ca+1}']['Nombre']))
-            cacp_tree.add("IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca+1}']['IP']))
-            cacp_tree.add("VCA IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca+1}']['VCA IP']))
-            cacp_tree.add("ESP IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca+1}']['ESP IP']))
-            ca_count += 1
+            cacp_tree.add("IP: " + net + str(ccaa[f'CA{ca+1}']['IP']))
+            cacp_tree.add("VCA IP: " + net + str(ccaa[f'CA{ca+1}']['VCA IP']))
+            cacp_tree.add("ESP IP: " + net + str(ccaa[f'CA{ca+1}']['ESP IP']))
         else:
-            cacv_tree = cacv_ptree.add("[bold][green]+[/green][/bold] " + str(ccaa[f'CA{ca_count+1}']['Nombre']))
-            cacv_tree.add("IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca_count+1}']['IP']))
-            cacv_tree.add("VCA IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca_count+1}']['VCA IP']))
-            cacv_tree.add("ESP IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca_count+1}']['ESP IP']))
+            cacv_tree = cacv_ptree.add("[bold][green]+[/green][/bold] " + str(ccaa[f'CA{ca+1}']['Nombre']))
+            cacv_tree.add("IP: " + net + str(ccaa[f'CA{ca+1}']['IP']))
+            cacv_tree.add("VCA IP: " + net + str(ccaa[f'CA{ca+1}']['VCA IP']))
+            cacv_tree.add("ESP IP: " + net + str(ccaa[f'CA{ca+1}']['ESP IP']))
 
 #Outputs
-print(print_tree())
+print('')
+print_tree()
 rprint(nvr_ptree)
 rprint(cam_ptree)
 rprint(cacp_ptree)
