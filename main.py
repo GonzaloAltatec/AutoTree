@@ -6,19 +6,37 @@ import odoo
 from rich.tree import Tree
 from rich import print as rprint
 from rich.console import Console
+from elements import CA
 console = Console()
 
 #Input manual del ID del sistema para el que se va a crear el arbol
 #id = int(console.input("[bold][[cyan]+[/cyan]] Introduce el ID de sistema: [/bold]"))
 
-id = "IN10145"
-id_sys = 4462
+#-----------------
+#ID's para Testing
+#-----------------
+
+id = "IN10203"
+#id_sys = 4492
+
+# x3CP x1CV
+#id = "IN10145"
+#id_sys = 4462
+
+# x2CP
+#id = "IN10158"
+#id_sys = 4470
+
+# x1CP
+#id = "IN10133"
+#id_sys = 4456
 
 elements = odoo.installation(id)
+cacp_qty = int(elements['CACP'][1])
+cacv_qty = int(elements['CACV'][1])
 
 cam_ptree = Tree("[bold][cyan]Camaras[/cyan][/bold]")
 nvr_ptree = Tree("[bold][cyan]NVR[/cyan][/bold]")
-caa_ptree = Tree("[bold][cyan]CCAA[/cyan][/bold]")
 cacp_ptree = Tree("[bold][cyan]CACP[/cyan][/bold]")
 cacv_ptree = Tree("[bold][cyan]CACV[/cyan][/bold]")
 
@@ -67,89 +85,95 @@ def camera_tree(elements):
     else:
         return("Cantidad no soportada")
 
-def cacp_tree(elements):
-    cacp_qty = int(elements['CACP'][1])
-    cacp_ip_final = cacp_qty +125 -1
-    cacp_ip_inicio = 125
-    cam_ip_final = cacp_ip_final + 40
-    cam_ip_inicio = 165
-
-    cacp_list = [125]
-    cam_list = [165]
-
-    if cacp_ip_final == 125:
-        return(cacp_list)
-    elif cacp_ip_final > 125 and cacp_ip_final < 164:
-        while cacp_ip_inicio < cacp_ip_final: 
-            cacp_ip_inicio += 1
-            cacp_list.append(cacp_ip_inicio)
-        return(cacp_list)
-    elif cacp_ip_final == 164:
-        while cacp_ip_inicio < cacp_ip_final: 
-            cacp_ip_inicio += 1
-            cacp_list.append(cacp_ip_inicio)
-        return(cacp_list)
-    else:
-        return("Cantidad no soportada")
-
-def cacv_tree(elements):
-    cacv_qty = int(elements['CACV'][1])
-    cacv_ip_final = cacv_qty +125 -1
-    cacv_ip_inicio = 125
-
-    cacv_list = [125]
-
-    if cacv_ip_final == 125:
-        return(cacv_list)
-    elif cacv_ip_final > 125 and cacv_ip_final < 164:
-        while cacv_ip_inicio < cacv_ip_final: 
-            cacv_ip_inicio += 1
-            cacv_list.append(cacv_ip_inicio)
-        return(cacv_list)
-    elif cacv_ip_final == 164:
-        while cacv_ip_inicio < cacv_ip_final: 
-            cacv_ip_inicio += 1
-            cacv_list.append(cacv_ip_inicio)
-        return(cacv_list)
-    else:
-        return("Cantidad no soportada")
-
-def cavp_tree(cacp_qty, cacv_qty):
-    cacp_qty = int(elements['CACP'][1])
-    cacv_qty = int(elements['CACV'][1])
-    cacp_ip_final = cacp_qty +125 -1
-    cacv_ip_final = cacp_ip_final + cacv_qty 
-
-    cacp_list = cacp_tree(cacp_qty)
-    cacv_list = []
-
-    cacv_ip_start = int(cacp_list[-1])
-    while cacv_ip_start < cacv_ip_final:
-        cacv_ip_start += 1
-        cacv_list.append(cacv_ip_start)
-    return(cacp_list, cacv_list)
-
 def ccaa_type(elements):
     cacp_qty = int(elements['CACP'][1])
     cacv_qty = int(elements['CACV'][1])
 
     if cacp_qty >= 1 and cacv_qty == 0:
         return('CACP')
-        #return(cacp_tree(cacp_qty))
     elif cacv_qty >= 1 and cacp_qty == 0:
         return('CACV')
-        #return(cacv_tree(cacv_qty))
     elif cacp_qty >= 1 and cacv_qty >= 1:
         return('CCAA')
-        #return(cavp_tree(cacp_qty, cacv_qty))
     else:
         return('ERROR CCAA')
-        #return(f"CACP:{cacp_qty}, CACV:{cacv_qty}")
+        
+def ccaa_names(cacp_qty, cacv_qty):
+    ccaa = ccaa_type(elements)
+    start_count = 1
+    name_list = []
 
+    if ccaa == 'CACP':
+        cacp_qty += 1
+        for name in range(1, cacp_qty):
+            name_list.append(f"CA{name} - PEATONAL")
+        return(name_list)
+    elif ccaa == 'CACV':
+        cacv_qty += 1
+        for name in range(1, cacv_qty):
+            name_list.append(f"CA{name} - VEHICULOS")
+        return(name_list)
+    elif ccaa == 'CCAA':
+        ccaa_final = cacp_qty + cacv_qty +1
+        while start_count <= cacp_qty:
+            name_list.append(f"CA{start_count} - PEATONAL")
+            start_count += 1
+        while start_count < ccaa_final:
+            name_list.append(f"CA{start_count} - VEHICULOS")
+            start_count += 1
+        return(name_list)
+
+def ccaa_ip(cacp_qty, cacv_qty):    
+    ccaa_total = cacp_qty + cacv_qty    
+    ip_start = 125
+    ip_final = ccaa_total +125 -1
+    ip_list = [125]
+
+    while ip_final > ip_list[-1]:
+        ip_start += 1
+        ip_list.append(ip_start)
+    return(ip_list)
+
+def vca_ip(cacp_qty, cacv_qty):    
+    ccaa_total = cacp_qty + cacv_qty    
+    ip_start = 165
+    ip_final = ccaa_total +165 -1
+    ip_list = [165]
+
+    while ip_final > ip_list[-1]:
+        ip_start += 1
+        ip_list.append(ip_start)
+    return(ip_list)
+
+def esp_ip(cacp_qty, cacv_qty):    
+    ccaa_total = cacp_qty + cacv_qty    
+    ip_start = 205
+    ip_final = ccaa_total +205 -1
+    ip_list = [205]
+
+    while ip_final > ip_list[-1]:
+        ip_start += 1
+        ip_list.append(ip_start)
+    return(ip_list)
+
+def dictionaries(cacp_qty, cacv_qty):
+    total = cacp_qty + cacv_qty
+    name = ccaa_names(cacp_qty, cacv_qty)
+    ip = ccaa_ip(cacp_qty, cacv_qty)
+    vca = vca_ip(cacp_qty, cacv_qty)
+    esp = esp_ip(cacp_qty, cacv_qty)
+
+    ca_dict = {}
+
+    for x in range(total):
+        ca = CA(name[x], ip[x], vca[x], esp[x])
+        ca_values = ca.dic()
+        ca_dict[f'CA{x+1}'] = ca_values
+    return(ca_dict)
 
 def print_tree():
 
-    ip = odoo.network(id_sys)
+    ip = odoo.network(id)
     net_1 = ip[0]
     net_2 = ip[1]
     net_3 = ip[2]
@@ -160,50 +184,58 @@ def print_tree():
     cam = camera_tree(elements)
     cam_qty = len(cam)
     
-    ccaa = ccaa_type(elements)
-    cacp_qty = int(elements['CACP'][1])
-    cacv_qty = int(elements['CACV'][1])
-    
+    ccaa = dictionaries(cacp_qty, cacv_qty)
+    total_ca = cacp_qty + cacv_qty
+
     #---
     #NVR
     #---
     for n in range(nvr_qty):
-        nvr_ptree.add(net_1 + "." + net_2 + "." + net_3 + "." + str(nvr[n]))
+        nvr_ptree.add(f"[bold][green]+[/green][/bold] NVR{n+1}: " + net_1 + "." + net_2 + "." + net_3 + "." + str(nvr[n]))
 
     #-------
     #Cámaras
     #-------
-    for c in range(cam_qty):
-        cam_ptree.add(net_1 + "." + net_2 + "." + net_3 + "." + str(cam[c]))
-    
+    cam_count = 0
+    cam_num = 1
+    nvr_num = 1
+    while cam_count < cam_qty:
+    #for c in range(cam_qty):
+        cam_ptree.add(f"[bold][green]+[/green][/bold] C{cam_num}N{nvr_num}: " + net_1 + "." + net_2 + "." + net_3 + "." + str(cam[cam_count]))
+        cam_num += 1
+        cam_count += 1
+        if cam_count == 20:
+            cam_num = 1
+            nvr_num += 1
+        if cam_count == 40:
+            nvr_num += 1
+        if cam_count == 60:
+            nvr_num += 1
     #----
     #CCAA
     #----
-    if ccaa == 'CACP':
-        cacp = cacp_tree(elements)
-        cacp_qty = len(cacp)
-        for cp in range(cacp_qty):
-            cacp_ptree.add(net_1 + "." + net_2 + "." + net_3 + "." + str(cacp[cp]))
-    elif ccaa == 'CACV':
-        cacv = cacv_tree(elements)
-        cacv_qty = len(cacv)
-        for cv in range(cacv_qty):
-            cacv_ptree.add(net_1 + "." + net_2 + "." + net_3 + "." + str(cacv[cv]))
-    elif ccaa == 'CCAA':
-        ca = cavp_tree(cacp_qty, cacv_qty)
-        cacp = ca[0]
-        cacp_qty = len(ca[0])
-        cacv = ca[1]
-        cacv_qty = len(ca[1])
-        for cp in range(cacp_qty):
-            cacp_ptree.add(net_1 + "." + net_2 + "." + net_3 + "." + str(cacp[cp]))
-        for cv in range(cacv_qty):
-            cacv_ptree.add(net_1 + "." + net_2 + "." + net_3 + "." + str(cacv[cv]))
-    else:
-        return('No hay controladoras')
+ 
+    type_list = []
+    ca_count = 0
 
+    for ca in range(total_ca):
+        name = ccaa[f'CA{ca+1}']['Nombre']
+        position = name.find('- PEATONAL')
+        type_list.append(position)
+        if position != -1:
+            cacp_tree = cacp_ptree.add("[bold][green]+[/green][/bold] " + str(ccaa[f'CA{ca+1}']['Nombre']))
+            cacp_tree.add("IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca+1}']['IP']))
+            cacp_tree.add("VCA IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca+1}']['VCA IP']))
+            cacp_tree.add("ESP IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca+1}']['ESP IP']))
+            ca_count += 1
+        else:
+            cacv_tree = cacv_ptree.add("[bold][green]+[/green][/bold] " + str(ccaa[f'CA{ca_count+1}']['Nombre']))
+            cacv_tree.add("IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca_count+1}']['IP']))
+            cacv_tree.add("VCA IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca_count+1}']['VCA IP']))
+            cacv_tree.add("ESP IP: " + net_1 + "." + net_2 + "." + net_3 + "." + str(ccaa[f'CA{ca_count+1}']['ESP IP']))
 
-print_tree()
+    
+print(print_tree())
 rprint(nvr_ptree)
 rprint(cam_ptree)
 rprint(cacp_ptree)

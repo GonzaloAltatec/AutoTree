@@ -28,3 +28,12 @@ repeated_cameras = elements_list.intersection(cameras_list)
 cameras_id = list(repeated_cameras)
 cameras_read = models.execute_kw(db, uid, password, 'sale.order.line', 'read', [cameras_id])
 print(elements)
+
+test = models.execute_kw(db, uid, password, 'project.project', 'search', [[['z_numero', '=', "IN10203"]]])
+test_read = models.execute_kw(db, uid, password, 'project.project', 'read', [test], {'fields': ['z_sistema_id']})
+
+for x in test_read:
+    ins_id = x['z_sistema_id']
+    print(ins_id[0])
+
+print(test_read)

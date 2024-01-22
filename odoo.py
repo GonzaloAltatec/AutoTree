@@ -16,7 +16,8 @@ usr_pass = sel_usr["password"]
 req = Odoo.Request(usr_url, usr_db, usr_usr, usr_pass)
 
 def network(id):
-    addr = req.get_router(id)
+    sys_id = req.get_sys_id(id)
+    addr = req.get_router(sys_id)
     net = addr.split('.')
     return(net)
 
