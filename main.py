@@ -51,7 +51,6 @@ def print_tree():
     cam_count = 0
     cam_num = 1
     nvr_num = 1
-    print(cam_qty)
     while cam_count < cam_qty:
     #for c in range(cam_qty):
         cam_ptree.add(f"[bold][green]+[/green][/bold] C{cam_num}N{nvr_num}: "+ net + str(cam[cam_count]))
