@@ -15,8 +15,7 @@ id = "IN10203"
 tree = OdooTree(id)
 
 #Arboles para outputs de consola
-cam_ptree = PTree("[bold][cyan]Camaras[/cyan][/bold]")
-nvr_ptree = PTree("[bold][cyan]NVR[/cyan][/bold]")
+cctv_ptree = PTree("[bold][cyan]CCTV[/cyan][/bold]")
 cacp_ptree = PTree("[bold][cyan]CACP[/cyan][/bold]")
 cacv_ptree = PTree("[bold][cyan]CACV[/cyan][/bold]")
 
@@ -39,31 +38,30 @@ def print_tree():
 
     ccaa = tree.ccaa_dictionary()
     
-    #---
-    #NVR
-    #---
-    for n in range(nvr_qty):
-        nvr_ptree.add(f"[bold][green]+[/green][/bold] NVR{n+1}: " + net + str(nvr[n]))
-
-    #-------
-    #Cámaras
-    #-------
+    #----
+    #CCTV
+    #----
     cam_count = 0
     cam_num = 1
     nvr_num = 1
-    print(cam_qty)
+    cctv_tree = cctv_ptree.add(f"[bold][green]+[/green]NVR{nvr_num}:[/bold] {net}{str(nvr[0])}")
     while cam_count < cam_qty:
-    #for c in range(cam_qty):
-        cam_ptree.add(f"[bold][green]+[/green][/bold] C{cam_num}N{nvr_num}: "+ net + str(cam[cam_count]))
-        cam_num += 1
+        cctv_tree.add(f'C{cam_num}N{nvr_num}: {net}{str(cam[cam_count])}')
         cam_count += 1
+        cam_num += 1
         if cam_count == 20:
             cam_num = 1
             nvr_num += 1
+            cctv_tree = cctv_ptree.add(f"[bold][green]+[/green]NVR{nvr_num}:[/bold] {net}{str(nvr[1])}")
         if cam_count == 40:
+            cam_num = 1
             nvr_num += 1
+            cctv_tree = cctv_ptree.add(f'[bold][green]+[/green]NVR{nvr_num}:[/bold] {net}{str(nvr[2])}')
         if cam_count == 60:
+            cam_num = 1
             nvr_num += 1
+            cctv_tree = cctv_ptree.add(f'[bold][green]+[/green]NVR{nvr_num}:[/bold] {net}{str(nvr[3])}')
+
     #----
     #CCAA
     #----
@@ -85,7 +83,6 @@ def print_tree():
 #Outputs
 print('')
 print_tree()
-rprint(nvr_ptree)
-rprint(cam_ptree)
+rprint(cctv_ptree)
 rprint(cacp_ptree)
 rprint(cacv_ptree)
