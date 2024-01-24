@@ -8,7 +8,7 @@ from rich.console import Console
 from elements import CA
 console = Console()
 
-#Input manual del ID del sistema para el que se va a crear el arbol
+#Input manual del ID de Instalación (No del sistema)
 id = console.input("[bold][[cyan]+[/cyan]] Introduce el ID de sistema: [/bold]")
 #id = "IN10235"
 tree = OdooTree(id)
@@ -67,12 +67,12 @@ def print_tree():
         name = ccaa[f'CA{ca+1}']['Nombre']
         position = name.find('- PEATONAL')
         if position != -1:
-            cacp_tree = cacp_ptree.add("[bold][green]+[/green][/bold] " + str(ccaa[f'CA{ca+1}']['Nombre']))
+            cacp_tree = cacp_ptree.add(f'[bold][green]+[/green] {str(ccaa[f'CA{ca+1}']['Nombre'])}[/bold]')
             cacp_tree.add("IP: " + net + str(ccaa[f'CA{ca+1}']['IP']))
             cacp_tree.add("VCA IP: " + net + str(ccaa[f'CA{ca+1}']['VCA IP']))
             cacp_tree.add("ESP IP: " + net + str(ccaa[f'CA{ca+1}']['ESP IP']))
         else:
-            cacv_tree = cacv_ptree.add("[bold][green]+[/green][/bold] " + str(ccaa[f'CA{ca+1}']['Nombre']))
+            cacv_tree = cacv_ptree.add(f'[bold][green]+[/green] {str(ccaa[f'CA{ca+1}']['Nombre'])}[/bold]')
             cacv_tree.add("IP: " + net + str(ccaa[f'CA{ca+1}']['IP']))
             cacv_tree.add("VCA IP: " + net + str(ccaa[f'CA{ca+1}']['VCA IP']))
             cacv_tree.add("ESP IP: " + net + str(ccaa[f'CA{ca+1}']['ESP IP']))
