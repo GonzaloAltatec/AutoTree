@@ -3,7 +3,7 @@ import sys
 sys.path.append('/home/laboratorio/Programs/Odoo')
 
 from odoo_users import User
-import odoo_basic as Odoo
+import odoo_req as Odoo
 
 #Datos de usuario para peticiones a API Odoo
 usr = User("gonzalo")
