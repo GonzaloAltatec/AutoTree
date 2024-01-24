@@ -9,9 +9,8 @@ from elements import CA
 console = Console()
 
 #Input manual del ID del sistema para el que se va a crear el arbol
-#id = console.input("[bold][[cyan]+[/cyan]] Introduce el ID de sistema: [/bold]")
-
-id = "IN10203"
+id = console.input("[bold][[cyan]+[/cyan]] Introduce el ID de sistema: [/bold]")
+#id = "IN10235"
 tree = OdooTree(id)
 
 #Arboles para outputs de consola
@@ -26,7 +25,6 @@ def print_tree():
     net = str(ip[0] + "." + ip[1] + "." + ip[2] + ".")
 
     nvr = tree.nvr_tree()
-    nvr_qty = len(nvr)
 
     cam = tree.camera_tree()
     cam_qty = len(cam)
@@ -46,7 +44,7 @@ def print_tree():
     nvr_num = 1
     cctv_tree = cctv_ptree.add(f"[bold][green]+[/green]NVR{nvr_num}:[/bold] {net}{str(nvr[0])}")
     while cam_count < cam_qty:
-        cctv_tree.add(f'C{cam_num}N{nvr_num}: {net}{str(cam[cam_count])}')
+        cctv_tree.add(f'[bold]C{cam_num}N{nvr_num}:[/bold] {net}{str(cam[cam_count])}')
         cam_count += 1
         cam_num += 1
         if cam_count == 20:
@@ -65,7 +63,6 @@ def print_tree():
     #----
     #CCAA
     #----
-
     for ca in range(total_ca):
         name = ccaa[f'CA{ca+1}']['Nombre']
         position = name.find('- PEATONAL')
