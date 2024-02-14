@@ -1,4 +1,9 @@
 {
+<<<<<<< HEAD
     "python.analysis.autoImportCompletions": true,
     "python.analysis.typeCheckingMode": "basic"
+=======
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true
+>>>>>>> ffd8eab (Ver 1.0)
 }
