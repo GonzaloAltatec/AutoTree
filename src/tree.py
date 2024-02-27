@@ -13,7 +13,7 @@ class Tree:
         self.net = Tree.network(self)
         self.password = Tree.ins_password(self)
 
-    def requests(self):
+    def requests(self): #Define que datos de usuario se le pasan a las peticiones de Odoo
         act_dir = os.path.dirname(__file__)
         dat_dir = os.path.join(act_dir, 'user.json')
 
@@ -22,13 +22,15 @@ class Tree:
         erp_data = Odoo(usr_data['url'], usr_data['db'], usr_data['username'], usr_data['password'])
         return(erp_data)
 
-    def ins_elements(self):
+    def ins_elements(self): #Saca un diccionario con la cantidad de elementos de cada tipo
         #Lectura de ID's de Instalación
         request = self.erp.search('project.project', 'z_numero', self.id)
         request_read = self.erp.read(request)
         
+        #Añadir aquí referencia de producto para buscar más elementos
         product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACV', 'CACSS']
 
+        #Añadir aquí también
         product_dict = {
             'CVCCV': 0,
             'CVCSG': 0,
@@ -58,7 +60,7 @@ class Tree:
                     product_dict[product] = ins_num
         return(product_dict)
 
-    def ins_password(self):
+    def ins_password(self): #Busca la contraseña de la instalación
         sys_request = self.erp.search('project.project', 'z_numero', self.id)
         sys_read = self.erp.read(sys_request)
         for sys in sys_read:
@@ -70,7 +72,7 @@ class Tree:
             router_password = router['router_password']
         return(router_password)
 
-    def network(self):
+    def network(self): #Lee la IP del Router y define el rango de red a seguir
         sys_request = self.erp.search('project.project', 'z_numero', self.id)
         sys_read = self.erp.read(sys_request)
         for sys in sys_read:
@@ -84,7 +86,7 @@ class Tree:
         net = str(ip[0] + '.' + ip[1] + '.' + ip[2] + '.') 
         return(net)
 
-    def nvr_ip(self):
+    def nvr_ip(self): #Listado con IP de Host de Grabadores
         nvr_qty = int(self.elements['CVCSG'])
         nvr_ip_final = nvr_qty + 10
 
@@ -106,10 +108,11 @@ class Tree:
         else:
             return("Cantidad no soportada")
 
-    def nvr_tree(self):
+    def nvr_tree(self): #Arbol del "Elemento" NVRx con todas sus propiedades
         nvr_list = []
         nvr = {
-            'Nombre': '0',
+            'name': '0',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'Dirección IP': '0',
             'Máscara de Subred': '255.255.255.0',
             'Puerta de enlace': '0',
@@ -125,7 +128,7 @@ class Tree:
         ip = Tree.nvr_ip(self)
         
         for n in range(len(ip)):
-            nvr['Nombre'] = f'NVR{n+1}'
+            nvr['name'] = f'NVR{n+1}'
             nvr['Dirección IP'] = f'{self.net}{ip[n]}'
             nvr['Puerta de enlace'] = f'{self.net}1'
             nvr['Password'] = f'{self.password}'
@@ -136,7 +139,7 @@ class Tree:
         else:
             return(False)
 
-    def camera_ip(self):
+    def camera_ip(self): #Listado de las IP de Host de las Cámaras
         cam_qty = int(self.elements['CVCCV'])
         cam_ip_final = cam_qty + 16 -1
 
@@ -158,11 +161,12 @@ class Tree:
         else:
             return("Cantidad no soportada")
 
-    def camera_tree(self):
+    def camera_tree(self): #Arbol del "Elemento" CxNx con todas las propiedades
         ip = Tree.camera_ip(self)
         camera_list = []
         camera = {
-            'Nombre': '0',
+            'name': '0',
+            'parent_id': '',
             'WDR Activado': 'SI/NO',
             'Dirección IP': '0',
             'Puerto HTTP': '80',
@@ -176,7 +180,7 @@ class Tree:
         cam_num = 1
 
         for n in range(len(ip)):
-            camera['Nombre'] = f'C{cam_num}N{nvr_num}'
+            camera['name'] = f'C{cam_num}N{nvr_num}'
             cam_num += 1
             if n == 19:
                 nvr_num += 1
@@ -184,12 +188,19 @@ class Tree:
             if n == 39:
                 nvr_num += 1
                 cam_num = 1
+            if n == 59:
+                nvr_num += 1
+                cam_num = 1
+            if n == 79:
+                nvr_num += 1
+                cam_num = 1
+            camera['parent_id'] = f'NVR{nvr_num}'
             camera['Dirección IP'] = f'{self.net}{ip[n]}'
             camera['Password'] = f'{self.password}'
             camera_list.append(camera.copy())
         return(camera_list)
 
-    def ccaa_type(self):
+    def ccaa_type(self): #Función que filtra si los CCAA són de tipo "Peatonal" o de "Vehículos"
         if self.cacp_qty >= 1 and self.cacv_qty == 0:
             return('CACP')
         elif self.cacv_qty >= 1 and self.cacp_qty == 0:
@@ -199,7 +210,7 @@ class Tree:
         else:
             return('ERROR CCAA')
 
-    def ccaa_names(self):
+    def ccaa_names(self): #Genera los nombres para CCAA según si són "Peatonales" o de "Vehículos"
         ccaa = self.ccaa_type()
         start_count = 1
         name_list = []
@@ -224,7 +235,7 @@ class Tree:
                 start_count += 1
             return(name_list)
 
-    def ccaa_ip(self):
+    def ccaa_ip(self): #Genera las IP de Host de CCAA
         ccaa_total = self.cacp_qty + self.cacv_qty
         ip_start = 125
         ip_final = ccaa_total +125 -1
@@ -235,7 +246,7 @@ class Tree:
             ip_list.append(ip_start)
         return(ip_list)
 
-    def vca_ip(self):
+    def vca_ip(self): #Genera IP de Host de Cámaras de CCAA (VCA)
         ccaa_total = self.cacp_qty + self.cacv_qty    
         ip_start = 165
         ip_final = ccaa_total +165 -1
@@ -246,7 +257,7 @@ class Tree:
             ip_list.append(ip_start)
         return(ip_list)
     
-    def esp_ip(self):
+    def esp_ip(self): #Genera IP de Host de ESP32 de CCAA
         ccaa_total = self.cacp_qty + self.cacv_qty
         ip_start = 205
         ip_final = ccaa_total +205 -1
@@ -257,7 +268,7 @@ class Tree:
             ip_list.append(ip_start)
         return(ip_list)
         
-    def ccaa_tree(self):
+    def ccaa_tree(self): #Arbol de "Elemento" CCAA con todas las propiedades
         total_ca = self.cacp_qty + self.cacv_qty
         name = self.ccaa_names()
         ip = self.ccaa_ip()
@@ -273,7 +284,8 @@ class Tree:
         caa_list = []
 
         cacp = {
-            'Nombre': '0',
+            'name': '0',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'Dirección IP': '0',
             'Usuario': 'admin',
             'Password': '0',
@@ -291,7 +303,8 @@ class Tree:
         }
 
         cacv = {
-            'Nombre': '0',
+            'name': '0',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'Dirección IP': '0',
             'Usuario': 'admin',
             'Password': '0',
@@ -314,7 +327,7 @@ class Tree:
         for ca in range(total_ca):
             position = name[ca].find('- PEATONAL')
             if position != -1:
-                cacp['Nombre'] = name[ca]
+                cacp['name'] = name[ca]
                 cacp['Dirección IP'] = f'{self.net}{ip[ca]}'
                 cacp['Password'] = f'{self.password}'
                 cacp['ESP32 IP'] = f'{self.net}{esp[ca]}'
@@ -324,7 +337,7 @@ class Tree:
                 cacp['Password Ralset'] = f'Ralset-{sys_id[0]}'
                 caa_list.append(cacp.copy())
             else:
-                cacv['Nombre'] = name[ca]
+                cacv['name'] = name[ca]
                 cacv['Dirección IP'] = f'{self.net}{ip[ca]}'
                 cacv['Password'] = f'{self.password}'
                 cacv['ESP32 IP'] = f'{self.net}{ip[ca]}'
@@ -337,8 +350,12 @@ class Tree:
 
         return(caa_list)
 
-    def sec_room(self):
+    def sec_room(self): #Arbol de "Elemento" Sala de Seguridad (Hablar con Moisés de como definir el producto)
+        ajax = []
+        
         hub = {
+            'name': 'CACSS - SALA DE SEGURIDAD',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'Nº de Abonado': '',
             'Dirección IP': 'DHCP',
             'Usuario Admin': 'admin',
@@ -347,6 +364,8 @@ class Tree:
             'Código Coacción': '0'
         }
         teclado = {
+            'name': '1 - TECLADO',
+            'parent_id': 'CACSS - SALA DE SEGURIDAD',
             'Nº Zona': '1',
             'Identificativo': 'TECLADO',
             'Tipo': 'Tecnica',
@@ -355,6 +374,8 @@ class Tree:
             'Grupo': '1'
         }
         sirena = {
+            'name': '2 - SIRENA',
+            'parent_id': 'CACSS - SALA DE SEGURIDAD',
             'Nº Zona': '2',
             'Identificativo': 'SIRENA',
             'Tipo': 'Tecnica',
@@ -363,6 +384,8 @@ class Tree:
             'Grupo': '1'
         }
         puerta = {
+            'name': '3 - PUERTA DEL CUARTO',
+            'parent_id': 'CACSS - SALA DE SEGURIDAD',
             'Nº Zona': '3',
             'Identificativo': 'PUERTA DEL CUARTO',
             'Tipo': 'Tecnica',
@@ -371,6 +394,8 @@ class Tree:
             'Grupo': '1'
         }
         sismico = {
+            'name': '4 - SISMICO DEL CUARTO',
+            'parent_id': 'CACSS - SALA DE SEGURIDAD',
             'Nº Zona': '4',
             'Identificativo': 'SISMICO DEL CUARTO',
             'Tipo': 'Tecnica',
@@ -379,16 +404,24 @@ class Tree:
             'Grupo': '1'
         }
         detector = {
+            'name': '5 - DETECTOR DEL CUARTO',
+            'parent_id': 'CACSS - SALA DE SEGURIDAD',
             'Nº Zona': '5',
             'Identificativo': 'DETECTOR DEL CUARTO',
             'Tipo': 'Retardada',
             'Cámara Asociada': 'Fotodetector',
             'Descripción': 'Fotodetector del Cuarto',
             'Grupo': '1'
-        } 
-        return(hub, teclado, sirena, puerta, sismico, detector)
+        }
+        ajax.append(hub)
+        ajax.append(teclado)
+        ajax.append(sirena)
+        ajax.append(puerta)
+        ajax.append(sismico)
+        ajax.append(detector)
+        return(ajax)
 
-    def run(self):
+    def run(self): #Ejecuta el arboleador al completo
         id_input = input('[+] Introduce ID de Instalación: ')
         tree = Tree(id_input)
 
