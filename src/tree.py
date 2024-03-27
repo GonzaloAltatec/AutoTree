@@ -1,24 +1,32 @@
-from odoo import Odoo
+#Versión 1.0
+from odoo_api import Odoo
 from re import split
 import os
 import json
 
 class Tree:
-    def __init__(self, id):
+    def __init__(self, id = False, production = False, usr_data = None):  
         self.id = id
+        self.production = production
+        self.usr_data = usr_data
         self.erp = Tree.requests(self)
         self.elements = Tree.ins_elements(self)
         self.cacp_qty = int(self.elements['CACP'])
         self.cacv_qty = int(self.elements['CACV'])
         self.net = Tree.network(self)
         self.password = Tree.ins_password(self)
-
-    def requests(self): #Define que datos de usuario se le pasan a las peticiones de Odoo
-        act_dir = os.path.dirname(__file__)
-        dat_dir = os.path.join(act_dir, 'user.json')
-
-        with open(dat_dir, 'r') as usr_file:
-            usr_data = json.load(usr_file)
+        if not self.id:
+            id_input = input('[+] Introduce ID de Instalación: ')
+            self.id = id_input
+        
+    def requests(self):
+        if not self.production:   
+            act_dir = os.path.dirname(__file__)
+            dat_dir = os.path.join(act_dir, 'user.json')
+            with open(dat_dir, 'r') as usr_file:
+                usr_data = json.load(usr_file)
+        else:
+            usr_data = self.usr_data   
         erp_data = Odoo(usr_data['url'], usr_data['db'], usr_data['username'], usr_data['password'])
         return(erp_data)
 
@@ -28,7 +36,7 @@ class Tree:
         request_read = self.erp.read(request)
         
         #Añadir aquí referencia de producto para buscar más elementos
-        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACV', 'CACSS']
+        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACV', 'CACSS', 'CVKP1', 'CVKP2']
 
         #Añadir aquí también
         product_dict = {
@@ -36,7 +44,9 @@ class Tree:
             'CVCSG': 0,
             'CACP': 0,
             'CACV': 0,
-            'CACSS': 0
+            'CACSS': 0,
+            'CVKP1': 0,
+            'CVKP2': 0
         }
 
         #Preparamos una lista con el campo de ID's de la lectura de Instalación
@@ -198,7 +208,10 @@ class Tree:
             camera['Dirección IP'] = f'{self.net}{ip[n]}'
             camera['Password'] = f'{self.password}'
             camera_list.append(camera.copy())
-        return(camera_list)
+        if self.elements['CVCCV'] != 0:
+            return(camera_list)
+        else:
+            return(False)
 
     def ccaa_type(self): #Función que filtra si los CCAA són de tipo "Peatonal" o de "Vehículos"
         if self.cacp_qty >= 1 and self.cacv_qty == 0:
@@ -347,88 +360,146 @@ class Tree:
                 cacv['Lector Proximidad 2'] = f'LP{ca+2}'
                 cacv['Password Ralset'] = f'Ralset-{sys_id[0]}'
                 caa_list.append(cacv.copy())
-
-        return(caa_list)
-
-    def sec_room(self): #Arbol de "Elemento" Sala de Seguridad (Hablar con Moisés de como definir el producto)
-        ajax = []
+        if caa_list:
+            return(caa_list)
+        else:
+            return(False)
         
-        hub = {
-            'name': 'CACSS - SALA DE SEGURIDAD',
-            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'Nº de Abonado': '',
-            'Dirección IP': 'DHCP',
-            'Usuario Admin': 'admin',
-            'Identificador del Hub': '0',
-            'Código Teclado': '0',
-            'Código Coacción': '0'
-        }
-        teclado = {
-            'name': '1 - TECLADO',
-            'parent_id': 'CACSS - SALA DE SEGURIDAD',
-            'Nº Zona': '1',
-            'Identificativo': 'TECLADO',
-            'Tipo': 'Tecnica',
-            'Cámara Asociada': '',
-            'Descripción': 'Teclado',
-            'Grupo': '1'
-        }
-        sirena = {
-            'name': '2 - SIRENA',
-            'parent_id': 'CACSS - SALA DE SEGURIDAD',
-            'Nº Zona': '2',
-            'Identificativo': 'SIRENA',
-            'Tipo': 'Tecnica',
-            'Cámara Asociada': '',
-            'Descripción': 'Sirena',
-            'Grupo': '1'
-        }
-        puerta = {
-            'name': '3 - PUERTA DEL CUARTO',
-            'parent_id': 'CACSS - SALA DE SEGURIDAD',
-            'Nº Zona': '3',
-            'Identificativo': 'PUERTA DEL CUARTO',
-            'Tipo': 'Tecnica',
-            'Cámara Asociada': '',
-            'Descripción': 'Magnético del Cuarto',
-            'Grupo': '1'
-        }
-        sismico = {
-            'name': '4 - SISMICO DEL CUARTO',
-            'parent_id': 'CACSS - SALA DE SEGURIDAD',
-            'Nº Zona': '4',
-            'Identificativo': 'SISMICO DEL CUARTO',
-            'Tipo': 'Tecnica',
-            'Cámara Asociada': '',
-            'Descripción': 'Sismico del Cuarto',
-            'Grupo': '1'
-        }
-        detector = {
-            'name': '5 - DETECTOR DEL CUARTO',
-            'parent_id': 'CACSS - SALA DE SEGURIDAD',
-            'Nº Zona': '5',
-            'Identificativo': 'DETECTOR DEL CUARTO',
-            'Tipo': 'Retardada',
-            'Cámara Asociada': 'Fotodetector',
-            'Descripción': 'Fotodetector del Cuarto',
-            'Grupo': '1'
-        }
-        ajax.append(hub)
-        ajax.append(teclado)
-        ajax.append(sirena)
-        ajax.append(puerta)
-        ajax.append(sismico)
-        ajax.append(detector)
-        return(ajax)
+    def sec_room(self): #Arbol de "Elemento" Sala de Seguridad (Hablar con Moisés de como definir el producto)
+        if self.elements['CACSS'] == 1: 
+            ajax = []
+            
+            hub = {
+                'name': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+                'Nº de Abonado': '',
+                'Dirección IP': 'DHCP',
+                'Usuario Admin': 'admin',
+                'Identificador del Hub': '0',
+                'Código Teclado': '0',
+                'Código Coacción': '0'
+            }
+            teclado = {
+                'name': '1 - TECLADO',
+                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'Nº Zona': '1',
+                'Identificativo': 'TECLADO',
+                'Tipo': 'Tecnica',
+                'Cámara Asociada': '',
+                'Descripción': 'Teclado',
+                'Grupo': '1'
+            }
+            sirena = {
+                'name': '2 - SIRENA',
+                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'Nº Zona': '2',
+                'Identificativo': 'SIRENA',
+                'Tipo': 'Tecnica',
+                'Cámara Asociada': '',
+                'Descripción': 'Sirena',
+                'Grupo': '1'
+            }
+            puerta = {
+                'name': '3 - PUERTA DEL CUARTO',
+                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'Nº Zona': '3',
+                'Identificativo': 'PUERTA DEL CUARTO',
+                'Tipo': 'Tecnica',
+                'Cámara Asociada': '',
+                'Descripción': 'Magnético del Cuarto',
+                'Grupo': '1'
+            }
+            sismico = {
+                'name': '4 - SISMICO DEL CUARTO',
+                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'Nº Zona': '4',
+                'Identificativo': 'SISMICO DEL CUARTO',
+                'Tipo': 'Tecnica',
+                'Cámara Asociada': '',
+                'Descripción': 'Sismico del Cuarto',
+                'Grupo': '1'
+            }
+            detector = {
+                'name': '5 - DETECTOR DEL CUARTO',
+                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'Nº Zona': '5',
+                'Identificativo': 'DETECTOR DEL CUARTO',
+                'Tipo': 'Retardada',
+                'Cámara Asociada': 'Fotodetector',
+                'Descripción': 'Fotodetector del Cuarto',
+                'Grupo': '1'
+            }
+            ajax.append(hub)
+            ajax.append(teclado)
+            ajax.append(sirena)
+            ajax.append(puerta)
+            ajax.append(sismico)
+            ajax.append(detector)
+            return(ajax)
+        else:
+            return(False)
+
+    def kit_portal(self):
+        if self.elements['CVKP1'] or self.elements['CVKP2'] == 1:
+            portal = []
+            if self.elements['CVKP1'] == 1:
+                c1 = {
+                    'name': 'C1',
+                    'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
+                    'WDR Activado': 'SI/NO',
+                    'Dirección IP': 0,
+                    'Puerto HTTP': 80,
+                    'Puerto SDK': 8000,
+                    'Puerto RTSP': 554,
+                    'Usuario': 'admin',
+                    'Password': ''
+                }
+                
+                c1['Dirección IP'] = f'{self.net}16'
+                c1['Password'] = f'{self.password}'
+                portal.append(c1)
+
+            elif self.elements['CVKP2'] == 1:
+                c1 = {
+                    'name': 'C1',
+                    'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
+                    'WDR Activado': 'SI/NO',
+                    'Dirección IP': 0,
+                    'Puerto HTTP': 80,
+                    'Puerto SDK': 8000,
+                    'Puerto RTSP': 554,
+                    'Usuario': 'admin',
+                    'Password': ''
+                }
+                c2 = {
+                    'name': 'C2',
+                    'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
+                    'WDR Activado': 'SI/NO',
+                    'Dirección IP': 0,
+                    'Puerto HTTP': 80,
+                    'Puerto SDK': 8000,
+                    'Puerto RTSP': 554,
+                    'Usuario': 'admin',
+                    'Password': ''
+                }
+                c1['Dirección IP'] = f'{self.net}16'
+                c1['Password'] = f'{self.password}'
+                c2['Dirección IP'] = f'{self.net}17'
+                c2['Password'] = f'{self.password}'
+                portal.append(c1)
+                portal.append(c2)
+
+            return(portal)                
+        else:
+            return(False)
 
     def run(self): #Ejecuta el arboleador al completo
-        id_input = input('[+] Introduce ID de Instalación: ')
-        tree = Tree(id_input)
-
+        
         elements_tree = []
-        elements_tree.append(tree.nvr_tree())
-        elements_tree.append(tree.camera_tree())
-        elements_tree.append(tree.ccaa_tree())
-        elements_tree.append(tree.sec_room())
+        elements_tree.append(self.nvr_tree())
+        elements_tree.append(self.camera_tree())
+        elements_tree.append(self.ccaa_tree())
+        elements_tree.append(self.sec_room())
+        elements_tree.append(self.kit_portal())
 
         return(elements_tree)

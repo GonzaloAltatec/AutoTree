@@ -1,6 +1,7 @@
 from tree import Tree
 
 try:
-    print(Tree.run(''))
+    tree = Tree('IN10270')
+    print(tree.run())
 except Exception as e:
     print(f'ERROR {e}')
