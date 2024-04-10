@@ -123,25 +123,25 @@ class Tree:
         nvr = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'Dirección IP': '0',
-            'Máscara de Subred': '255.255.255.0',
-            'Puerta de enlace': '0',
-            'DNS Principal': '8.8.8.8',
-            'DNS Secundario': '8.8.4.4',
-            'Puerto HTTP': '80',
-            'Puerto SDK': '8000',
-            'Puerto RTSP': '554',
-            'Usuario': 'admin',
-            'Password': '0'
+            'DIRECCION IP': '0',
+            'MASCARA DE SUBRED': '255.255.255.0',
+            'PUERTA DE ENLACE': '0',
+            'DNS PRINCIPAL': '8.8.8.8',
+            'DNS SECUNDARIO': '8.8.4.4',
+            'PUERTO HTTP': '80',
+            'PUERTO SDK': '8000',
+            'PUERTO RTSP': '554',
+            'USUARIO': 'admin',
+            'PASSWORD': '0'
         }
 
         ip = Tree.nvr_ip(self)
         
         for n in range(len(ip)):
             nvr['name'] = f'NVR{n+1}'
-            nvr['Dirección IP'] = f'{self.net}{ip[n]}'
-            nvr['Puerta de enlace'] = f'{self.net}1'
-            nvr['Password'] = f'{self.password}'
+            nvr['DIRECCION IP'] = f'{self.net}{ip[n]}'
+            nvr['PUERTA DE ENLACE'] = f'{self.net}1'
+            nvr['PASSWORD'] = f'{self.password}'
             nvr_list.append(nvr.copy())
 
         if self.elements['CVCSG'] != 0:
@@ -177,13 +177,13 @@ class Tree:
         camera = {
             'name': '0',
             'parent_id': '',
-            'WDR Activado': 'SI/NO',
-            'Dirección IP': '0',
-            'Puerto HTTP': '80',
-            'Puerto SDK': '8000',
-            'Puerto RTSP': '554',
-            'Usuario': 'admin',
-            'Password': '0'
+            'WDR ACTIVADO': 'SI/NO',
+            'DIRECCION IP': '0',
+            'PUERTO HTTP': '80',
+            'PUERTO SDK': '8000',
+            'PUERTO RTSP': '554',
+            'USUARIO': 'admin',
+            'PASSWORD': '0'
         }
 
         nvr_num = 1
@@ -191,6 +191,7 @@ class Tree:
 
         for n in range(len(ip)):
             camera['name'] = f'C{cam_num}N{nvr_num}'
+            camera['parent_id'] = f'NVR{nvr_num}'
             cam_num += 1
             if n == 19:
                 nvr_num += 1
@@ -204,9 +205,8 @@ class Tree:
             if n == 79:
                 nvr_num += 1
                 cam_num = 1
-            camera['parent_id'] = f'NVR{nvr_num}'
-            camera['Dirección IP'] = f'{self.net}{ip[n]}'
-            camera['Password'] = f'{self.password}'
+            camera['DIRECCION IP'] = f'{self.net}{ip[n]}'
+            camera['PASSWORD'] = f'{self.password}'
             camera_list.append(camera.copy())
         if self.elements['CVCCV'] != 0:
             return(camera_list)
@@ -299,66 +299,66 @@ class Tree:
         cacp = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'Dirección IP': '0',
-            'Usuario': 'admin',
-            'Password': '0',
+            'DIRECCION IP': '0',
+            'USUARIO': 'admin',
+            'PASSWORD': '0',
             'ESP32 IP': '0',
             'ESP32 MAC': '0',
-            'VCA Nombre': '0',
+            'VCA NOMBRE': '0',
             'VCA IP': '0',
-            'VCA Usuario': 'admin',
-            'VCA Password': '0',
+            'VCA USUARIO': 'admin',
+            'VCA PASSWORD': '0',
             'VCA HTTP': '80',
             'VCA SDK': '8000',
             'VCA RTSP': '554',
-            'Lector Proximidad': '0',
-            'Password Ralset': '0'
+            'LECTOR PROXIMIDAD': '0',
+            'PASSWORD RALSET': '0'
         }
 
         cacv = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'Dirección IP': '0',
-            'Usuario': 'admin',
-            'Password': '0',
+            'DIRECCION IP': '0',
+            'USUARIO': 'admin',
+            'PASSWORD': '0',
             'ESP32 IP': '0',
             'ESP32 MAC': '0',
-            'VCA Nombre': '0',
+            'VCA NOMBRE': '0',
             'VCA IP': '0',
-            'VCA Usuario': 'admin',
-            'VCA Password': '0',
+            'VCA USUARIO': 'admin',
+            'VCA PASSWORD': '0',
             'VCA HTTP': '80',
             'VCA SDK': '8000',
             'VCA RTSP': '554',
-            'Via Radio Canal': '1',
-            'Via Radio Reader': '1',
-            'Lector Proximidad 1': '0',
-            'Lector Proximidad 2': '0',
-            'Password Ralset': '0'
+            'VIA RADIO CANAL': '1',
+            'VIA RADIO READER': '1',
+            'LECTOR PROXIMIDAD 1': '0',
+            'LECTOR PROXIMIDAD 2': '0',
+            'PASSWORD RALSET': '0'
         }
 
         for ca in range(total_ca):
             position = name[ca].find('- PEATONAL')
             if position != -1:
                 cacp['name'] = name[ca]
-                cacp['Dirección IP'] = f'{self.net}{ip[ca]}'
-                cacp['Password'] = f'{self.password}'
+                cacp['DIRECCION IP'] = f'{self.net}{ip[ca]}'
+                cacp['PASSWORD'] = f'{self.password}'
                 cacp['ESP32 IP'] = f'{self.net}{esp[ca]}'
-                cacp['VCA Nombre'] = f'V{ca+1}CA{ca+1}'
+                cacp['VCA NOMBRE'] = f'V{ca+1}CA{ca+1}'
                 cacp['VCA IP'] = f'{self.net}{vca[ca]}'
-                cacp['Lector Proximidad'] = f'LP{ca+1}'
-                cacp['Password Ralset'] = f'Ralset-{sys_id[0]}'
+                cacp['LECTOR PROXIMIDAD'] = f'LP{ca+1}'
+                cacp['PASSWORD RALSET'] = f'Ralset-{sys_id[0]}'
                 caa_list.append(cacp.copy())
             else:
                 cacv['name'] = name[ca]
-                cacv['Dirección IP'] = f'{self.net}{ip[ca]}'
-                cacv['Password'] = f'{self.password}'
+                cacv['DIRECCION IP'] = f'{self.net}{ip[ca]}'
+                cacv['PASSWORD'] = f'{self.password}'
                 cacv['ESP32 IP'] = f'{self.net}{ip[ca]}'
-                cacv['VCA Nombre'] = f'V{ca+1}CA{ca+1}'
+                cacv['VCA NOMBRE'] = f'V{ca+1}CA{ca+1}'
                 cacv['VCA IP'] = f'{self.net}{vca[ca]}'
-                cacv['Lector Proximidad 1'] = f'LP{ca+1}'
-                cacv['Lector Proximidad 2'] = f'LP{ca+2}'
-                cacv['Password Ralset'] = f'Ralset-{sys_id[0]}'
+                cacv['LECTOR PROXIMIDAD 1'] = f'LP{ca+1}'
+                cacv['Lector PROXIMIDAD 2'] = f'LP{ca+2}'
+                cacv['PASSWORD RALSET'] = f'Ralset-{sys_id[0]}'
                 caa_list.append(cacv.copy())
         if caa_list:
             return(caa_list)
@@ -372,62 +372,62 @@ class Tree:
             hub = {
                 'name': 'CACSS - SALA DE SEGURIDAD',
                 'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-                'Nº de Abonado': '',
-                'Dirección IP': 'DHCP',
-                'Usuario Admin': 'admin',
-                'Identificador del Hub': '0',
-                'Código Teclado': '0',
-                'Código Coacción': '0'
+                'NUMERO ABONADO': '',
+                'DIRECCION IP': 'DHCP',
+                'USUARIO ADMIN': 'admin',
+                'ID DEL HUB': '0',
+                'CODIGO TECLADO': '0',
+                'CODIGO COACCION': '0'
             }
             teclado = {
                 'name': '1 - TECLADO',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'Nº Zona': '1',
-                'Identificativo': 'TECLADO',
-                'Tipo': 'Tecnica',
-                'Cámara Asociada': '',
-                'Descripción': 'Teclado',
-                'Grupo': '1'
+                'NUMERO ZONA': '1',
+                'IDENTIFICATIVO': 'TECLADO',
+                'TIPO': 'Tecnica',
+                'CAMARA ASOCIADA': '',
+                'DESCRIPCION': 'Teclado',
+                'GRUPO': '1'
             }
             sirena = {
                 'name': '2 - SIRENA',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'Nº Zona': '2',
-                'Identificativo': 'SIRENA',
-                'Tipo': 'Tecnica',
-                'Cámara Asociada': '',
-                'Descripción': 'Sirena',
-                'Grupo': '1'
+                'NUMERO ZONA': '2',
+                'IDENTIFICATIVO': 'SIRENA',
+                'TIPO': 'Tecnica',
+                'CAMARA ASOCIADA': '',
+                'DESCRIPCION': 'Sirena',
+                'GRUPO': '1'
             }
             puerta = {
                 'name': '3 - PUERTA DEL CUARTO',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'Nº Zona': '3',
-                'Identificativo': 'PUERTA DEL CUARTO',
-                'Tipo': 'Tecnica',
-                'Cámara Asociada': '',
-                'Descripción': 'Magnético del Cuarto',
-                'Grupo': '1'
+                'NUMERO ZONA': '3',
+                'IDENTIFICATIVO': 'PUERTA DEL CUARTO',
+                'TIPO': 'Tecnica',
+                'CAMARA ASOCIADA': '',
+                'DESCRIPCION': 'Magnético del Cuarto',
+                'GRUPO': '1'
             }
             sismico = {
                 'name': '4 - SISMICO DEL CUARTO',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'Nº Zona': '4',
-                'Identificativo': 'SISMICO DEL CUARTO',
-                'Tipo': 'Tecnica',
-                'Cámara Asociada': '',
-                'Descripción': 'Sismico del Cuarto',
-                'Grupo': '1'
+                'NUMERO ZONA': '4',
+                'IDENTIFICATIVO': 'SISMICO DEL CUARTO',
+                'TIPO': 'Tecnica',
+                'CAMARA ASOCIADA': '',
+                'DESCRIPCION': 'Sismico del Cuarto',
+                'GRUPO': '1'
             }
             detector = {
                 'name': '5 - DETECTOR DEL CUARTO',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'Nº Zona': '5',
-                'Identificativo': 'DETECTOR DEL CUARTO',
-                'Tipo': 'Retardada',
-                'Cámara Asociada': 'Fotodetector',
-                'Descripción': 'Fotodetector del Cuarto',
-                'Grupo': '1'
+                'NUMERO ZONA': '5',
+                'IDENTIFICATIVO': 'DETECTOR DEL CUARTO',
+                'TIPO': 'Retardada',
+                'CAMARA ASOCIADA': 'Fotodetector',
+                'DESCRIPCION': 'Fotodetector del Cuarto',
+                'GRUPO': '1'
             }
             ajax.append(hub)
             ajax.append(teclado)
@@ -446,46 +446,46 @@ class Tree:
                 c1 = {
                     'name': 'C1',
                     'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'WDR Activado': 'SI/NO',
-                    'Dirección IP': 0,
-                    'Puerto HTTP': 80,
-                    'Puerto SDK': 8000,
-                    'Puerto RTSP': 554,
-                    'Usuario': 'admin',
-                    'Password': ''
+                    'WDR ACTIVADO': 'SI/NO',
+                    'DIRECCION IP': 0,
+                    'PUERTO HTTP': 80,
+                    'PUERTO SDK': 8000,
+                    'PUERTO RTSP': 554,
+                    'USUARIO': 'admin',
+                    'PASSWORD': ''
                 }
                 
-                c1['Dirección IP'] = f'{self.net}16'
-                c1['Password'] = f'{self.password}'
+                c1['DIRECCION IP'] = f'{self.net}16'
+                c1['PASSWORD'] = f'{self.password}'
                 portal.append(c1)
 
             elif self.elements['CVKP2'] == 1:
                 c1 = {
                     'name': 'C1',
                     'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'WDR Activado': 'SI/NO',
-                    'Dirección IP': 0,
-                    'Puerto HTTP': 80,
-                    'Puerto SDK': 8000,
-                    'Puerto RTSP': 554,
-                    'Usuario': 'admin',
-                    'Password': ''
+                    'WDR ACTIVADO': 'SI/NO',
+                    'DIRECCION IP': 0,
+                    'PUERTO HTTP': 80,
+                    'PUERTO SDK': 8000,
+                    'PUERTO RTSP': 554,
+                    'USUARIO': 'admin',
+                    'PASSWORD': ''
                 }
                 c2 = {
                     'name': 'C2',
                     'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'WDR Activado': 'SI/NO',
-                    'Dirección IP': 0,
-                    'Puerto HTTP': 80,
-                    'Puerto SDK': 8000,
-                    'Puerto RTSP': 554,
-                    'Usuario': 'admin',
-                    'Password': ''
+                    'WDR ACTIVADO': 'SI/NO',
+                    'DIRECCION IP': 0,
+                    'PUERTO HTTP': 80,
+                    'PUERTO SDK': 8000,
+                    'PUERTO RTSP': 554,
+                    'USUARIO': 'admin',
+                    'PASSWORD': ''
                 }
-                c1['Dirección IP'] = f'{self.net}16'
-                c1['Password'] = f'{self.password}'
-                c2['Dirección IP'] = f'{self.net}17'
-                c2['Password'] = f'{self.password}'
+                c1['DIRECCION IP'] = f'{self.net}16'
+                c1['PASSWORD'] = f'{self.password}'
+                c2['DIRECCION IP'] = f'{self.net}17'
+                c2['PASSWORD'] = f'{self.password}'
                 portal.append(c1)
                 portal.append(c2)
 
