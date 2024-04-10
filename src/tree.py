@@ -123,7 +123,7 @@ class Tree:
         nvr = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'partner_id': 'CVCSG',
+            'product_id': 'CVCSG',
             'DIRECCION IP': '0',
             'MASCARA DE SUBRED': '255.255.255.0',
             'PUERTA DE ENLACE': '0',
@@ -178,7 +178,7 @@ class Tree:
         camera = {
             'name': '0',
             'parent_id': '',
-            'partner_id': 'CVCCV',
+            'product_id': 'CVCCV',
             'WDR ACTIVADO': 'SI/NO',
             'DIRECCION IP': '0',
             'PUERTO HTTP': '80',
@@ -301,7 +301,7 @@ class Tree:
         cacp = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'partner_id': 'CACP',
+            'product_id': 'CACP',
             'DIRECCION IP': '0',
             'USUARIO': 'admin',
             'PASSWORD': '0',
@@ -321,7 +321,7 @@ class Tree:
         cacv = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'partner_id': 'CACV',
+            'product_id': 'CACV',
             'DIRECCION IP': '0',
             'USUARIO': 'admin',
             'PASSWORD': '0',
@@ -376,7 +376,7 @@ class Tree:
             hub = {
                 'name': 'CACSS - SALA DE SEGURIDAD',
                 'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-                'partner_id': 'CACSS',
+                'product_id': 'CACSS',
                 'NUMERO ABONADO': '',
                 'DIRECCION IP': 'DHCP',
                 'USUARIO ADMIN': 'admin',
@@ -451,7 +451,7 @@ class Tree:
                 c1 = {
                     'name': 'C1',
                     'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'partner_id': 'CVKP1',
+                    'product_id': 'CVKP1',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
                     'PUERTO HTTP': 80,
@@ -469,7 +469,7 @@ class Tree:
                 c1 = {
                     'name': 'C1',
                     'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'partner_id': 'CVKP2',
+                    'product_id': 'CVKP2',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
                     'PUERTO HTTP': 80,
@@ -481,7 +481,7 @@ class Tree:
                 c2 = {
                     'name': 'C2',
                     'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'partner_id': 'CVKP2',
+                    'product_id': 'CVKP2',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
                     'PUERTO HTTP': 80,
