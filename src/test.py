@@ -1,4 +1,6 @@
 
+from tree import Tree
 
-variable = 'Hola'
-print(variable + 'Gonzalo')
+tree = Tree('IN10295')
+
+print(tree.casc_tree())

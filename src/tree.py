@@ -10,12 +10,13 @@ class Tree:
         self.id = id
         self.production = production
         self.usr_data = usr_data
-        self.erp = Tree.requests(self)
-        self.elements = Tree.ins_elements(self)
+        self.erp = self.requests()
+        self.elements = self.ins_elements()
         self.cacp_qty = int(self.elements['CACP'])
         self.cacv_qty = int(self.elements['CACV'])
-        self.net = Tree.network(self)
-        self.password = Tree.ins_password(self)
+        self.ccaasc_qty = int(self.elements['CCAASC'])
+        self.net = self.network()
+        self.password = self.ins_password()
         if not self.id:
             id_input = input('[+] Introduce ID de Instalación: ')
             self.id = id_input
@@ -253,7 +254,7 @@ class Tree:
             return(name_list)
 
     def ccaa_ip(self): #Genera las IP de Host de CCAA
-        ccaa_total = self.cacp_qty + self.cacv_qty
+        ccaa_total = self.cacp_qty + self.cacv_qty + self.ccaasc_qty
         ip_start = 125
         ip_final = ccaa_total +125 -1
         ip_list = [125]
@@ -275,7 +276,7 @@ class Tree:
         return(ip_list)
     
     def esp_ip(self): #Genera IP de Host de ESP32 de CCAA
-        ccaa_total = self.cacp_qty + self.cacv_qty
+        ccaa_total = self.cacp_qty + self.cacv_qty + self.ccaasc_qty
         ip_start = 205
         ip_final = ccaa_total +205 -1
         ip_list = [205]
@@ -449,6 +450,9 @@ class Tree:
             ajax.append(puerta)
             ajax.append(sismico)
             ajax.append(detector)
+
+            
+
             return(ajax)
         else:
             return(False)
@@ -511,15 +515,53 @@ class Tree:
             return(False)
 
     def casc_tree(self): #Árbol para CCAA de ascensores
-        pass
+        total_ca = self.cacp_qty + self.cacv_qty
+        esp = list(self.esp_ip())
+        ip = self.ccaa_ip()
+
+        #Bucle para comprobar cantidad de Lectores LP de CACP's y CACV's
+        lp_num = 0
+        for lp in range(self.cacp_qty):
+            lp_num += 1
+        for lp in range(self.cacv_qty):
+            lp_num += 2
+
+        casc_list = []
+        casc = {
+            'name': '0',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+            'product_id': 'CCAASC',
+            'DIRECCION IP': '0',
+            'USUARIO': 'admin',
+            'PASSWORD': '0',
+            'ESP32 IP': '0',
+            'ESP32 MAC': '0',
+            'LECTOR PROXIMIDAD': '0'
+        }
+
+        
+        for ca in range(self.ccaasc_qty):
+            casc['name'] = f'CA{ca+total_ca+1} - CONTROLADORA ASCENSOR'
+            casc['DIRECCION IP'] = f'{self.net}{ip[ca]+total_ca}'
+            casc['PASSWORD'] = f'{self.password}'
+            casc['ESP32 IP'] = f'{self.net}{esp[ca]+total_ca}'
+            casc['LECTOR PROXIMIDAD'] = f'LP{lp_num+1}'
+            lp_num += 1
+            casc_list.append(casc.copy())
+        
+        if casc_list:
+            return(casc_list)
+        else:
+            return(False)
 
     def run(self): #Ejecuta el arboleador al completo
         
         elements_tree = []
         elements_tree.append(self.nvr_tree())
         elements_tree.append(self.camera_tree())
-        elements_tree.append(self.ccaa_tree())
         elements_tree.append(self.sec_room())
+        elements_tree.append(self.ccaa_tree())
+        elements_tree.append(self.casc_tree())
         elements_tree.append(self.kit_portal())
-
+        
         return(elements_tree)
