@@ -1,5 +1,6 @@
-#Versión 2.0
-from .odoo_api import Odoo
+#Versión 4.0
+#CAMBIAR .odoo_api antes de enviar
+from odoo_api import Odoo
 from re import split
 import os
 import json
@@ -36,7 +37,7 @@ class Tree:
         request_read = self.erp.read(request)
         
         #Añadir aquí referencia de producto para buscar más elementos
-        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACV', 'CACSS', 'CVKP1', 'CVKP2']
+        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACV', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC']
 
         #Añadir aquí también
         product_dict = {
@@ -46,7 +47,8 @@ class Tree:
             'CACV': 0,
             'CACSS': 0,
             'CVKP1': 0,
-            'CVKP2': 0
+            'CVKP2': 0,
+            'CCAASC': 0
         }
 
         #Preparamos una lista con el campo de ID's de la lectura de Instalación
@@ -315,6 +317,7 @@ class Tree:
             'VCA SDK': '8000',
             'VCA RTSP': '554',
             'LECTOR PROXIMIDAD': '0',
+            'USUARIO RALSET': 'RALSET',
             'PASSWORD RALSET': '0'
         }
 
@@ -338,8 +341,11 @@ class Tree:
             'VIA RADIO READER': '1',
             'LECTOR PROXIMIDAD 1': '0',
             'LECTOR PROXIMIDAD 2': '0',
+            'USUARIO RALSET': 'RALSET',
             'PASSWORD RALSET': '0'
         }
+
+        lp_counter = 1
 
         for ca in range(total_ca):
             position = name[ca].find('- PEATONAL')
@@ -350,6 +356,7 @@ class Tree:
                 cacp['ESP32 IP'] = f'{self.net}{esp[ca]}'
                 cacp['VCA NOMBRE'] = f'V{ca+1}CA{ca+1}'
                 cacp['VCA IP'] = f'{self.net}{vca[ca]}'
+                cacp['VCA PASSWORD'] = f'{self.password}'
                 cacp['LECTOR PROXIMIDAD'] = f'LP{ca+1}'
                 cacp['PASSWORD RALSET'] = f'Ralset-{sys_id[0]}'
                 caa_list.append(cacp.copy())
@@ -357,11 +364,13 @@ class Tree:
                 cacv['name'] = name[ca]
                 cacv['DIRECCION IP'] = f'{self.net}{ip[ca]}'
                 cacv['PASSWORD'] = f'{self.password}'
-                cacv['ESP32 IP'] = f'{self.net}{ip[ca]}'
+                cacv['ESP32 IP'] = f'{self.net}{esp[ca]}'
                 cacv['VCA NOMBRE'] = f'V{ca+1}CA{ca+1}'
                 cacv['VCA IP'] = f'{self.net}{vca[ca]}'
-                cacv['LECTOR PROXIMIDAD 1'] = f'LP{ca+1}'
-                cacv['Lector PROXIMIDAD 2'] = f'LP{ca+2}'
+                cacv['VCA PASSWORD'] = f'{self.password}'
+                cacv['LECTOR PROXIMIDAD 1'] = f'LP{ca+lp_counter}'
+                cacv['LECTOR PROXIMIDAD 2'] = f'LP{ca+lp_counter+1}'
+                lp_counter += 1
                 cacv['PASSWORD RALSET'] = f'Ralset-{sys_id[0]}'
                 caa_list.append(cacv.copy())
         if caa_list:
@@ -444,7 +453,7 @@ class Tree:
         else:
             return(False)
 
-    def kit_portal(self):
+    def kit_portal(self): #Arbol de generación para "Kit Portal" de 1 o 2 cámaras
         if self.elements['CVKP1'] or self.elements['CVKP2'] == 1:
             portal = []
             if self.elements['CVKP1'] == 1:
@@ -500,6 +509,9 @@ class Tree:
             return(portal)                
         else:
             return(False)
+
+    def casc_tree(self): #Árbol para CCAA de ascensores
+        pass
 
     def run(self): #Ejecuta el arboleador al completo
         
