@@ -1,4 +1,4 @@
-#Versión 4.0
+#Versión 5.0
 #CAMBIAR .odoo_api antes de enviar
 from odoo_api import Odoo
 from re import split
