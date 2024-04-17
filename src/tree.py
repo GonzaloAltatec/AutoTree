@@ -444,6 +444,7 @@ class Tree:
                 'DESCRIPCION': 'Fotodetector del Cuarto',
                 'GRUPO': '1'
             }
+
             ajax.append(hub)
             ajax.append(teclado)
             ajax.append(sirena)
@@ -451,7 +452,74 @@ class Tree:
             ajax.append(sismico)
             ajax.append(detector)
 
-            
+            #Cambios en "Sala de seguridad" en caso de tener CCAA
+            total_ca = self.cacp_qty + self.cacv_qty
+            if total_ca >= 1:
+                multi = {
+                    'name': '0',
+                    'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                    'product_id': 'CAPA',
+                    'NUMERO ZONA': '0',
+                    'IDENTIFICATIVO': 'MULTITRANSMITTER',
+                    'TIPO': 'TECNICA',
+                    'CAMARA ASOCIADA': '0',
+                    'DESCRIPCION': 'MULTITRANSMITTER',
+                    'GRUPO': '1'
+                }
+
+                ca = {
+                    'name': '0',
+                    'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                    'NUMERO ZONA': '0',
+                    'IDENTIFICATIVO': '0',
+                    'TIPO': 'INSTANTANEA',
+                    'CAMARA ASOCIADA': '0',
+                    'DESCRIPCION': 'MULTITRANSMITTER',
+                    'GRUPO': '2'
+                }
+                
+                multi_counter = 0
+
+                #Generación de elemento "Multitransmitter" en "Sala de Seguridad" en caso de existir CCAA's
+                if total_ca <= 16:
+                    multi['name'] = '6 - MULTITRANSMITTER'
+                    multi['NUMERO ZONA'] = '6'
+                    ajax.append(multi.copy())
+                                                        
+                elif total_ca >= 17 and total_ca <= 32:
+                    multi['name'] = '6 - MULTITRANSMITTER'
+                    multi['NUMERO ZONA'] = '6'
+                    ajax.append(multi.copy())
+
+                    multi['name'] = '7 - MULTITRANSMITTER'
+                    multi['NUMERO ZONA'] = '7'
+                    ajax.append(multi.copy())
+                    multi_counter += 1
+
+                elif total_ca >= 33 and total_ca <= 39:
+                    multi['name'] = '6 - MULTITRANSMITTER'
+                    multi['NUMERO ZONA'] = '6'
+                    ajax.append(multi.copy())
+
+                    multi['name'] = '7 - MULTITRANSMITTER'
+                    multi['NUMERO ZONA'] = '7'
+                    ajax.append(multi.copy())
+
+                    multi['name'] = '8 - MULTITRANSMITTER'
+                    multi['NUMERO ZONA'] = '8'
+                    ajax.append(multi.copy())
+                    multi_counter += 2
+
+                else:
+                    pass
+
+            for c in range(total_ca):
+                ca['name'] = f'{c+7} - CA{c+1}'
+                ca['NUMERO ZONA'] = f'{c+multi_counter+7}'
+                ca['IDENTIFICATIVO'] = f'CA{c+1}'
+                ca['CAMARA ASOCIADA'] = f'V{c+1}CA{c+1}'
+                ajax.append(ca.copy())
+   
 
             return(ajax)
         else:
