@@ -1,4 +1,4 @@
-#Versión 5.0
+#Versión 6.0
 #CAMBIAR .odoo_api antes de enviar
 from odoo_api import Odoo
 from re import split
@@ -392,7 +392,7 @@ class Tree:
                 'USUARIO ADMIN': 'admin',
                 'ID DEL HUB': '0',
                 'CODIGO TECLADO': '0',
-                'CODIGO COACCION': '0'
+                'NUMERO SIM': '0'
             }
             teclado = {
                 'name': '1 - TECLADO',
@@ -419,9 +419,9 @@ class Tree:
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
                 'NUMERO ZONA': '3',
                 'IDENTIFICATIVO': 'PUERTA DEL CUARTO',
-                'TIPO': 'Tecnica',
+                'TIPO': 'Retardada',
                 'CAMARA ASOCIADA': '',
-                'DESCRIPCION': 'Magnético del Cuarto',
+                'DESCRIPCION': 'Magnetico del Cuarto',
                 'GRUPO': '1'
             }
             sismico = {
@@ -429,7 +429,7 @@ class Tree:
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
                 'NUMERO ZONA': '4',
                 'IDENTIFICATIVO': 'SISMICO DEL CUARTO',
-                'TIPO': 'Tecnica',
+                'TIPO': 'Retardada',
                 'CAMARA ASOCIADA': '',
                 'DESCRIPCION': 'Sismico del Cuarto',
                 'GRUPO': '1'
@@ -461,7 +461,7 @@ class Tree:
                     'product_id': 'CAPA',
                     'NUMERO ZONA': '0',
                     'IDENTIFICATIVO': 'MULTITRANSMITTER',
-                    'TIPO': 'TECNICA',
+                    'TIPO': 'Tecnica',
                     'CAMARA ASOCIADA': '0',
                     'DESCRIPCION': 'MULTITRANSMITTER',
                     'GRUPO': '1'
@@ -531,7 +531,7 @@ class Tree:
             if self.elements['CVKP1'] == 1:
                 c1 = {
                     'name': 'C1',
-                    'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
+                    'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
                     'product_id': 'CVKP1',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
@@ -549,7 +549,7 @@ class Tree:
             elif self.elements['CVKP2'] == 1:
                 c1 = {
                     'name': 'C1',
-                    'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
+                    'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
                     'product_id': 'CVKP2',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
@@ -561,7 +561,7 @@ class Tree:
                 }
                 c2 = {
                     'name': 'C2',
-                    'parent:id': 'ROUTER PARA PORTAL PROTEGIDO',
+                    'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
                     'product_id': 'CVKP2',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
