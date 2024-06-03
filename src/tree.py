@@ -1,4 +1,4 @@
-#Versión 6.0
+#Versión 7.0
 #CAMBIAR .odoo_api antes de enviar
 from odoo_api import Odoo
 from re import split
@@ -182,6 +182,7 @@ class Tree:
             'name': '0',
             'parent_id': '',
             'product_id': 'CVCCV',
+            'NOMBRE': '0',
             'WDR ACTIVADO': 'SI/NO',
             'DIRECCION IP': '0',
             'PUERTO HTTP': '80',
@@ -196,6 +197,7 @@ class Tree:
 
         for n in range(len(ip)):
             camera['name'] = f'C{cam_num}N{nvr_num}'
+            camera['NOMBRE'] = f'C{cam_num}N{nvr_num}'
             camera['parent_id'] = f'NVR{nvr_num}'
             cam_num += 1
             if n == 19:
