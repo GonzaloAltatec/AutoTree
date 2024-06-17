@@ -652,7 +652,10 @@ class Tree:
                 capa1['NVR IP'] = f'{self.net}{121+cap1}'
                 capa_list.append(capa1.copy())
         
-        return(capa_list)
+        if capa_list:
+            return(capa_list)
+        else:
+            return(False)
 
     def run(self): #Ejecuta el arboleador al completo
         
