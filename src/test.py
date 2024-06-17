@@ -1,6 +1,9 @@
 
 from tree import Tree
 
-tree = Tree('IN10295')
+tree = Tree('IN10346')
 
-print(tree.casc_tree())
+#elems = tree.ins_elements()
+runeo = tree.run()
+
+print(runeo)

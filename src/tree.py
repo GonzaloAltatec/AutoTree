@@ -1,4 +1,4 @@
-#Versión 7.0
+#Versión 8.0
 #CAMBIAR .odoo_api antes de enviar
 from odoo_api import Odoo
 from re import split
@@ -12,9 +12,7 @@ class Tree:
         self.usr_data = usr_data
         self.erp = self.requests()
         self.elements = self.ins_elements()
-        self.cacp_qty = int(self.elements['CACP'])
-        self.cacv_qty = int(self.elements['CACV'])
-        self.ccaasc_qty = int(self.elements['CCAASC'])
+        self.total_ca = int(self.elements['CACP'] + self.elements['CACP1'] + self.elements['CACV'] + self.elements['CACV1'] + self.elements['CCAASC'])
         self.net = self.network()
         self.password = self.ins_password()
         if not self.id:
@@ -38,18 +36,22 @@ class Tree:
         request_read = self.erp.read(request)
         
         #Añadir aquí referencia de producto para buscar más elementos
-        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACV', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC']
+        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACP1', 'CACV', 'CACV1', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC', 'CAPA', 'CAPA1']
 
         #Añadir aquí también
         product_dict = {
             'CVCCV': 0,
             'CVCSG': 0,
             'CACP': 0,
+            'CACP1': 0,
             'CACV': 0,
+            'CACV1': 0,
             'CACSS': 0,
             'CVKP1': 0,
             'CVKP2': 0,
-            'CCAASC': 0
+            'CCAASC': 0,
+            'CAPA': 0,
+            'CAPA1': 0
         }
 
         #Preparamos una lista con el campo de ID's de la lectura de Instalación
@@ -127,6 +129,7 @@ class Tree:
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'product_id': 'CVCSG',
+            'NOMBRE': '0',
             'DIRECCION IP': '0',
             'MASCARA DE SUBRED': '255.255.255.0',
             'PUERTA DE ENLACE': '0',
@@ -143,6 +146,7 @@ class Tree:
         
         for n in range(len(ip)):
             nvr['name'] = f'NVR{n+1}'
+            nvr['NOMBRE'] = f'NVR{n+1}'
             nvr['DIRECCION IP'] = f'{self.net}{ip[n]}'
             nvr['PUERTA DE ENLACE'] = f'{self.net}1'
             nvr['PASSWORD'] = f'{self.password}'
@@ -219,46 +223,10 @@ class Tree:
             return(camera_list)
         else:
             return(False)
-
-    def ccaa_type(self): #Función que filtra si los CCAA són de tipo "Peatonal" o de "Vehículos"
-        if self.cacp_qty >= 1 and self.cacv_qty == 0:
-            return('CACP')
-        elif self.cacv_qty >= 1 and self.cacp_qty == 0:
-            return('CACV')
-        elif self.cacp_qty >= 1 and self.cacv_qty >= 1:
-            return('CCAA')
-        else:
-            return('ERROR CCAA')
-
-    def ccaa_names(self): #Genera los nombres para CCAA según si són "Peatonales" o de "Vehículos"
-        ccaa = self.ccaa_type()
-        start_count = 1
-        name_list = []
-
-        if ccaa == 'CACP':
-            self.cacp_qty += 1
-            for name in range(1, self.cacp_qty):
-                name_list.append(f"CA{name} - PEATONAL")
-            return(name_list)
-        elif ccaa == 'CACV':
-            self.cacv_qty += 1
-            for name in range(1, self.cacv_qty):
-                name_list.append(f"CA{name} - VEHICULOS")
-            return(name_list)
-        elif ccaa == 'CCAA':
-            ccaa_final = self.cacp_qty + self.cacv_qty +1
-            while start_count <= self.cacp_qty:
-                name_list.append(f"CA{start_count} - PEATONAL")
-                start_count += 1
-            while start_count < ccaa_final:
-                name_list.append(f"CA{start_count} - VEHICULOS")
-                start_count += 1
-            return(name_list)
-
+ 
     def ccaa_ip(self): #Genera las IP de Host de CCAA
-        ccaa_total = self.cacp_qty + self.cacv_qty + self.ccaasc_qty
         ip_start = 125
-        ip_final = ccaa_total +125 -1
+        ip_final = self.total_ca +125 -1
         ip_list = [125]
 
         while ip_final > ip_list[-1]:
@@ -267,9 +235,8 @@ class Tree:
         return(ip_list)
 
     def vca_ip(self): #Genera IP de Host de Cámaras de CCAA (VCA)
-        ccaa_total = self.cacp_qty + self.cacv_qty    
         ip_start = 165
-        ip_final = ccaa_total +165 -1
+        ip_final = self.total_ca +165 -1
         ip_list = [165]
 
         while ip_final > ip_list[-1]:
@@ -278,176 +245,113 @@ class Tree:
         return(ip_list)
     
     def esp_ip(self): #Genera IP de Host de ESP32 de CCAA
-        ccaa_total = self.cacp_qty + self.cacv_qty + self.ccaasc_qty
         ip_start = 205
-        ip_final = ccaa_total +205 -1
+        ip_final = self.total_ca +205 -1
         ip_list = [205]
 
         while ip_final > ip_list[-1]:
             ip_start += 1
             ip_list.append(ip_start)
         return(ip_list)
-        
-    def ccaa_tree(self): #Arbol de "Elemento" CCAA con todas las propiedades
-        total_ca = self.cacp_qty + self.cacv_qty
-        name = self.ccaa_names()
-        ip = self.ccaa_ip()
-        vca = self.vca_ip()
-        esp = self.esp_ip()
-
-        sys_request = self.erp.search('project.project', 'z_numero', self.id)
-        sys_read = self.erp.read(sys_request)
-        for sys in sys_read:
-            sys_id = sys['z_sistema_id']
-
-
-        caa_list = []
-
-        cacp = {
-            'name': '0',
-            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'product_id': 'CACP',
-            'DIRECCION IP': '0',
-            'USUARIO': 'admin',
-            'PASSWORD': '0',
-            'ESP32 IP': '0',
-            'ESP32 MAC': '0',
-            'VCA NOMBRE': '0',
-            'VCA IP': '0',
-            'VCA USUARIO': 'admin',
-            'VCA PASSWORD': '0',
-            'VCA HTTP': '80',
-            'VCA SDK': '8000',
-            'VCA RTSP': '554',
-            'LECTOR PROXIMIDAD': '0',
-            'USUARIO RALSET': 'RALSET',
-            'PASSWORD RALSET': '0'
-        }
-
-        cacv = {
-            'name': '0',
-            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
-            'product_id': 'CACV',
-            'DIRECCION IP': '0',
-            'USUARIO': 'admin',
-            'PASSWORD': '0',
-            'ESP32 IP': '0',
-            'ESP32 MAC': '0',
-            'VCA NOMBRE': '0',
-            'VCA IP': '0',
-            'VCA USUARIO': 'admin',
-            'VCA PASSWORD': '0',
-            'VCA HTTP': '80',
-            'VCA SDK': '8000',
-            'VCA RTSP': '554',
-            'VIA RADIO CANAL': '1',
-            'VIA RADIO READER': '1',
-            'LECTOR PROXIMIDAD 1': '0',
-            'LECTOR PROXIMIDAD 2': '0',
-            'USUARIO RALSET': 'RALSET',
-            'PASSWORD RALSET': '0'
-        }
-
-        lp_counter = 1
-
-        for ca in range(total_ca):
-            position = name[ca].find('- PEATONAL')
-            if position != -1:
-                cacp['name'] = name[ca]
-                cacp['DIRECCION IP'] = f'{self.net}{ip[ca]}'
-                cacp['PASSWORD'] = f'{self.password}'
-                cacp['ESP32 IP'] = f'{self.net}{esp[ca]}'
-                cacp['VCA NOMBRE'] = f'V{ca+1}CA{ca+1}'
-                cacp['VCA IP'] = f'{self.net}{vca[ca]}'
-                cacp['VCA PASSWORD'] = f'{self.password}'
-                cacp['LECTOR PROXIMIDAD'] = f'LP{ca+1}'
-                cacp['PASSWORD RALSET'] = f'Ralset-{sys_id[0]}'
-                caa_list.append(cacp.copy())
-            else:
-                cacv['name'] = name[ca]
-                cacv['DIRECCION IP'] = f'{self.net}{ip[ca]}'
-                cacv['PASSWORD'] = f'{self.password}'
-                cacv['ESP32 IP'] = f'{self.net}{esp[ca]}'
-                cacv['VCA NOMBRE'] = f'V{ca+1}CA{ca+1}'
-                cacv['VCA IP'] = f'{self.net}{vca[ca]}'
-                cacv['VCA PASSWORD'] = f'{self.password}'
-                cacv['LECTOR PROXIMIDAD 1'] = f'LP{ca+lp_counter}'
-                cacv['LECTOR PROXIMIDAD 2'] = f'LP{ca+lp_counter+1}'
-                lp_counter += 1
-                cacv['PASSWORD RALSET'] = f'Ralset-{sys_id[0]}'
-                caa_list.append(cacv.copy())
-        if caa_list:
-            return(caa_list)
-        else:
-            return(False)
-        
-    def sec_room(self): #Arbol de "Elemento" Sala de Seguridad (Hablar con Moisés de como definir el producto)
+                
+    def sec_room(self): #Arbol de "Elemento" Sala de Seguridad (Redefiniendo Producto)
         if self.elements['CACSS'] == 1: 
             ajax = []
             
             hub = {
-                'name': 'CACSS - SALA DE SEGURIDAD',
+                'name': 'ALARMA INALAMBRICA',
                 'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
                 'product_id': 'CACSS',
                 'NUMERO ABONADO': '',
-                'DIRECCION IP': 'DHCP',
-                'USUARIO ADMIN': 'admin',
-                'ID DEL HUB': '0',
-                'CODIGO TECLADO': '0',
-                'NUMERO SIM': '0'
+                'FABRICANTE': 'AJAX',
+                'MODELO': 'HUB 2 (2G)',
+                'UBICACION': '',
+                'ID': '0',
+                'CODIGO USUARIO': '0',
+                'CODIGO COACCION': '0',
+                'CODIGO INSTALADOR': '0'
             }
-            teclado = {
-                'name': '1 - TECLADO',
+            transmisor_1 = {
+                'name': 'TRANSMISOR PRINCIPAL',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'NUMERO ZONA': '1',
+                'TIPO': 'ETHERNET',
+                'MODELO': 'INTEGRADO',
+                'DIRECCION IP': f'{self.net}100',
+                'PUERTO HTTP': '',
+                'PUERTO SOFTWARE': '',
+                'PASSWORD MODULO': '',
+                'ID SITE PARADOXMYHOME': ''
+            }
+            transmisor_2 = {
+                'name': 'TRANSMISOR SECUNDARIO',
+                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'TIPO': 'GPRS',
+                'MODELO': 'INTEGRADO',
+                'DIRECCION IP': '',
+                'PUERTO HTTP': '',
+                'PUERTO SOFTWARE': '',
+                'PASSWORD MODULO': '',
+                'ID SITE PARADOXMYHOME': ''
+            }
+
+            teclado = {
+                'name': 'ZONA 1',
+                'parent_id': 'CACSS - SALA DE SEGURIDAD',
                 'IDENTIFICATIVO': 'TECLADO',
-                'TIPO': 'Tecnica',
+                'DESCRIPCION': 'SABOTAJE TAPA TECLADO',
+                'AREA': '1',
+                'TIPO DE DETECTOR': 'SABOTAJE DISPOSITIVO',
+                'TIPO DE ZONA': '',
                 'CAMARA ASOCIADA': '',
-                'DESCRIPCION': 'Teclado',
-                'GRUPO': '1'
+                'CONECTADA A': 'HUB'
             }
             sirena = {
-                'name': '2 - SIRENA',
+                'name': 'ZONA 2',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'NUMERO ZONA': '2',
                 'IDENTIFICATIVO': 'SIRENA',
-                'TIPO': 'Tecnica',
+                'DESCRIPCION': 'SABOTAJE TAPA SIRENA',
+                'AREA': '1',
+                'TIPO DE DETECTOR': 'SABOTAJE DISPOSITIVO',
+                'TIPO DE ZONA': '',
                 'CAMARA ASOCIADA': '',
-                'DESCRIPCION': 'Sirena',
-                'GRUPO': '1'
+                'CONECTADA A': 'HUB'
             }
             puerta = {
-                'name': '3 - PUERTA DEL CUARTO',
+                'name': 'ZONA 3',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'NUMERO ZONA': '3',
                 'IDENTIFICATIVO': 'PUERTA DEL CUARTO',
-                'TIPO': 'Retardada',
+                'DESCRIPCION': 'APERTURA PUERTA CUARTO',
+                'AREA': '1',
+                'TIPO DE DETECTOR': 'CONTACTO MAGNETICO',
+                'TIPO DE ZONA': 'RETARDADA',
                 'CAMARA ASOCIADA': '',
-                'DESCRIPCION': 'Magnetico del Cuarto',
-                'GRUPO': '1'
+                'CONECTADA A': 'HUB'
             }
             sismico = {
-                'name': '4 - SISMICO DEL CUARTO',
+                'name': 'ZONA 4',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'NUMERO ZONA': '4',
                 'IDENTIFICATIVO': 'SISMICO DEL CUARTO',
-                'TIPO': 'Retardada',
-                'CAMARA ASOCIADA': '',
-                'DESCRIPCION': 'Sismico del Cuarto',
-                'GRUPO': '1'
+                'DESCRIPCION': 'SISMICO DEL CUARTO',
+                'AREA': '1',
+                'TIPO DE DETECTOR': 'DETECTOR IMPACTO',
+                'TIPO DE ZONA': 'INSTANTANEA',
+                'CAMARA ASOCIADA': 'HUB'
             }
             detector = {
-                'name': '5 - DETECTOR DEL CUARTO',
+                'name': 'ZONA 5',
                 'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                'NUMERO ZONA': '5',
                 'IDENTIFICATIVO': 'DETECTOR DEL CUARTO',
-                'TIPO': 'Retardada',
-                'CAMARA ASOCIADA': 'Fotodetector',
-                'DESCRIPCION': 'Fotodetector del Cuarto',
-                'GRUPO': '1'
+                'DESCRIPCION': 'DETECTOR VOLUMETRICO DEL CUARTO',
+                'AREA': '1',
+                'TIPO DE DETECTOR': 'FOTODETECTOR',
+                'TIPO DE ZONA': 'INSTANTANEA',
+                'CAMARA ASOCIADA': '',
+                'CONECTADA A': 'HUB'
             }
 
             ajax.append(hub)
+            ajax.append(transmisor_1)
+            ajax.append(transmisor_2)
             ajax.append(teclado)
             ajax.append(sirena)
             ajax.append(puerta)
@@ -455,69 +359,62 @@ class Tree:
             ajax.append(detector)
 
             #Cambios en "Sala de seguridad" en caso de tener CCAA
-            total_ca = self.cacp_qty + self.cacv_qty
-            if total_ca >= 1:
+            if self.total_ca >= 1:
                 multi = {
                     'name': '0',
                     'parent_id': 'CACSS - SALA DE SEGURIDAD',
                     'product_id': 'CAPA',
-                    'NUMERO ZONA': '0',
                     'IDENTIFICATIVO': 'MULTITRANSMITTER',
-                    'TIPO': 'Tecnica',
-                    'CAMARA ASOCIADA': '0',
                     'DESCRIPCION': 'MULTITRANSMITTER',
-                    'GRUPO': '1'
+                    'AREA': '1',
+                    'TIPO DE DETECTOR': 'SABOTAJE TAPA MULTITRANSMITTER',
+                    'TIPO DE ZONA': '',
+                    'CAMARA ASOCIADA': '',
+                    'CONECTADA A': 'HUB'
                 }
 
                 ca = {
                     'name': '0',
                     'parent_id': 'CACSS - SALA DE SEGURIDAD',
-                    'NUMERO ZONA': '0',
-                    'IDENTIFICATIVO': '0',
-                    'TIPO': 'INSTANTANEA',
-                    'CAMARA ASOCIADA': '0',
-                    'DESCRIPCION': 'MULTITRANSMITTER',
-                    'GRUPO': '2'
+                    'IDENTIFICATIVO': '',
+                    'DESCRIPCION': 'APERTURA FORZADA',
+                    'AREA': '2',
+                    'TIPO DE DETECTOR': '',
+                    'TIPO DE ZONA': 'INSTANTANEA',
+                    'CAMARA ASOCIADA': '',
+                    'CONECTADA A': 'MULTITRANSMITTER'
                 }
                 
                 multi_counter = 0
 
                 #Generación de elemento "Multitransmitter" en "Sala de Seguridad" en caso de existir CCAA's
-                if total_ca <= 16:
-                    multi['name'] = '6 - MULTITRANSMITTER'
-                    multi['NUMERO ZONA'] = '6'
+                if self.total_ca <= 16:
+                    multi['name'] = 'ZONA 6'
                     ajax.append(multi.copy())
                                                         
-                elif total_ca >= 17 and total_ca <= 32:
-                    multi['name'] = '6 - MULTITRANSMITTER'
-                    multi['NUMERO ZONA'] = '6'
+                elif self.total_ca >= 17 and self.total_ca <= 32:
+                    multi['name'] = 'ZONA 6'
                     ajax.append(multi.copy())
 
-                    multi['name'] = '7 - MULTITRANSMITTER'
-                    multi['NUMERO ZONA'] = '7'
+                    multi['name'] = 'ZONA 7'
                     ajax.append(multi.copy())
                     multi_counter += 1
 
-                elif total_ca >= 33 and total_ca <= 39:
-                    multi['name'] = '6 - MULTITRANSMITTER'
-                    multi['NUMERO ZONA'] = '6'
+                elif self.total_ca >= 33 and self.total_ca <= 39:
+                    multi['name'] = 'ZONA 6'
                     ajax.append(multi.copy())
 
-                    multi['name'] = '7 - MULTITRANSMITTER'
-                    multi['NUMERO ZONA'] = '7'
+                    multi['name'] = 'ZONA 7'
                     ajax.append(multi.copy())
 
-                    multi['name'] = '8 - MULTITRANSMITTER'
-                    multi['NUMERO ZONA'] = '8'
+                    multi['name'] = 'ZONA 8'
                     ajax.append(multi.copy())
                     multi_counter += 2
-
                 else:
                     pass
 
-            for c in range(total_ca):
-                ca['name'] = f'{c+7} - CA{c+1}'
-                ca['NUMERO ZONA'] = f'{c+multi_counter+7}'
+            for c in range(self.total_ca):
+                ca['name'] = f'ZONA {c+multi_counter+7}'
                 ca['IDENTIFICATIVO'] = f'CA{c+1}'
                 ca['CAMARA ASOCIADA'] = f'V{c+1}CA{c+1}'
                 ajax.append(ca.copy())
@@ -583,20 +480,71 @@ class Tree:
             return(portal)                
         else:
             return(False)
-
-    def casc_tree(self): #Árbol para CCAA de ascensores
-        total_ca = self.cacp_qty + self.cacv_qty
-        esp = list(self.esp_ip())
+     
+    def ccaa_tree(self): #Función testing para arbol CCAA
+        #---------
+        #Variables
+        #---------
+        cacp_qty = int(self.elements['CACP'])
+        cacv_qty = int(self.elements['CACV'])
+        cacp1_qty = int(self.elements['CACP1'])
+        cacv1_qty = int(self.elements['CACV1'])
+        casc_qty = int(self.elements['CCAASC'])
         ip = self.ccaa_ip()
+        esp = self.esp_ip()
+        vca = self.vca_ip()
 
-        #Bucle para comprobar cantidad de Lectores LP de CACP's y CACV's
-        lp_num = 0
-        for lp in range(self.cacp_qty):
-            lp_num += 1
-        for lp in range(self.cacv_qty):
-            lp_num += 2
+        #----------------------------
+        #Listas de elementos de arbol
+        #----------------------------
 
-        casc_list = []
+        ccaa_list = []
+
+        cacp = {
+            'name': '0',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+            'product_id': 'CACP',
+            'DIRECCION IP': '0',
+            'USUARIO': 'admin',
+            'PASSWORD': '0',
+            'ESP32 IP': '0',
+            'ESP32 MAC': '0',
+            'VCA NOMBRE': '0',
+            'VCA IP': '0',
+            'VCA USUARIO': 'admin',
+            'VCA PASSWORD': '0',
+            'VCA HTTP': '80',
+            'VCA SDK': '8000',
+            'VCA RTSP': '554',
+            'LECTOR PROXIMIDAD': '0',
+            'USUARIO RALSET': 'RALSET',
+            'PASSWORD RALSET': '0'
+        }
+        
+        cacv = {
+            'name': '0',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+            'product_id': 'CACV',
+            'DIRECCION IP': '',
+            'USUARIO': 'admin',
+            'PASSWORD': '0',
+            'ESP32 IP': '0',
+            'ESP32 MAC': '0',
+            'VCA NOMBRE': '0',
+            'VCA IP': '0',
+            'VCA USUARIO': 'admin',
+            'VCA PASSWORD': '0',
+            'VCA HTTP': '80',
+            'VCA SDK': '8000',
+            'VCA RTSP': '554',
+            'VIA RADIO CANAL': '1',
+            'VIA RADIO READER': '1',
+            'LECTOR PROXIMIDAD 1': '0',
+            'LECTOR PROXIMIDAD 2': '0',
+            'USUARIO RALSET': 'RALSET',
+            'PASSWORD RALSET': '0'
+        }
+        
         casc = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
@@ -609,20 +557,102 @@ class Tree:
             'LECTOR PROXIMIDAD': '0'
         }
 
-        
-        for ca in range(self.ccaasc_qty):
-            casc['name'] = f'CA{ca+total_ca+1} - CONTROLADORA ASCENSOR'
-            casc['DIRECCION IP'] = f'{self.net}{ip[ca]+total_ca}'
-            casc['PASSWORD'] = f'{self.password}'
-            casc['ESP32 IP'] = f'{self.net}{esp[ca]+total_ca}'
-            casc['LECTOR PROXIMIDAD'] = f'LP{lp_num+1}'
-            lp_num += 1
-            casc_list.append(casc.copy())
-        
-        if casc_list:
-            return(casc_list)
+        #---------------------
+        #Modificación de datos
+        #---------------------
+
+        counter = 0
+        lp_counter = 0
+
+        #Arbol CCAA Peatonal    
+        if self.elements['CACP'] or self.elements['CACP1'] != 0:
+            for cap in range(cacp_qty + cacp1_qty):
+                counter += 1
+                if cap >= cacp_qty:
+                    cacp['product_id'] = 'CACP1'
+                cacp['name'] = f'CA{counter} - PEATONAL'
+                cacp['DIRECCION IP'] = f'{self.net}{ip[cap]}'
+                cacp['PASSWORD'] = self.password
+                cacp['ESP32 IP'] = f'{self.net}{esp[cap]}'
+                cacp['VCA NOMBRE'] = f'V{counter}CA{counter}'
+                cacp['VCA IP'] = f'{self.net}{vca[cap]}'
+                cacp['VCA PASSWORD'] = self.password
+                cacp['LECTOR PROXIMIDAD'] = f'LP{counter}'
+                lp_counter += 1
+                cacp['PASSWORD RALSET'] = self.password
+                ccaa_list.append(cacp.copy())
+
+        #Arbol CCAA Vehiculos        
+        if self.elements['CACV'] or self.elements['CACV1'] != 0:
+            for cav in range(cacv_qty + cacv1_qty):
+                counter += 1
+                if cav >= cacv_qty:
+                    cacv['product_id'] = 'CACV1'
+                cacv['name'] = f'CA{counter} - VEHICULOS'
+                cacv['DIRECCION IP'] = f'{self.net}{ip[counter-1]}'
+                cacv['PASSWORD'] = self.password
+                cacv['ESP32 IP'] = f'{self.net}{esp[counter-1]}'
+                cacv['VCA NOMBRE'] = f'V{counter}CA{counter}'
+                cacv['VCA IP'] = f'{self.net}{vca[counter-1]}'
+                cacv['VCA PASSWORD'] = self.password
+                cacv['LECTOR PROXIMIDAD 1'] = f'LP{lp_counter+1}'
+                cacv['LECTOR PROXIMIDAD 2'] = f'LP{lp_counter+2}'
+                lp_counter += 2
+                cacv['PASSWORD RALSET'] = self.password
+                ccaa_list.append(cacv.copy())
+
+        #Arbol CCAA Ascensore 
+        if self.elements['CCAASC'] != 0:
+            for cas in range(casc_qty):
+                counter += 1
+                casc['name'] = f'CA{counter} - ASCENSORES'
+                casc['DIRECCION IP'] = f'{self.net}{ip[counter-1]}'
+                casc['PASSWORD'] = self.password
+                casc['ESP32 IP'] = f'{self.net}{esp[counter-1]}'
+                casc['LECTOR PROXIMIDAD'] = f'LP{lp_counter}'
+                lp_counter += 1
+                ccaa_list.append(casc.copy())
+
+        if ccaa_list:
+            return(ccaa_list)
         else:
             return(False)
+
+    def capa_tree(self):
+        
+        capa_list = []
+
+        capa = {
+            'name': '',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+            'product_id': 'CAPA',
+            'ESP32 IP': '',
+            'ESP32 MAC': ''
+        }
+
+        capa1 = {
+            'name': '',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+            'product_id': 'CAPA1',
+            'ESP32 IP': '',
+            'ESP32 MAC': '',
+            'NVR IP': ''
+        }
+
+        if self.elements['CAPA'] != 0:
+            for cap in range(self.elements['CAPA']):
+                capa['name'] = f'CAPA {cap+1}'
+                capa['ESP32 IP'] = f'{self.net}{5+cap}'
+                capa_list.append(capa.copy())
+      
+        if self.elements['CAPA1'] != 0:
+            for cap1 in range(self.elements['CAPA']):
+                capa1['name'] = f'CAPA {cap1+1}'
+                capa1['ESP32 IP'] = f'{self.net}{5+cap1}'
+                capa1['NVR IP'] = f'{self.net}{121+cap1}'
+                capa_list.append(capa1.copy())
+        
+        return(capa_list)
 
     def run(self): #Ejecuta el arboleador al completo
         
@@ -630,8 +660,8 @@ class Tree:
         elements_tree.append(self.nvr_tree())
         elements_tree.append(self.camera_tree())
         elements_tree.append(self.sec_room())
+        elements_tree.append(self.capa_tree())
         elements_tree.append(self.ccaa_tree())
-        elements_tree.append(self.casc_tree())
         elements_tree.append(self.kit_portal())
         
         return(elements_tree)
