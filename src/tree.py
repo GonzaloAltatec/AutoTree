@@ -1,9 +1,11 @@
-#Versión 8.0
+#Versión 9.2
 #CAMBIAR .odoo_api antes de enviar
 from odoo_api import Odoo
 from re import split
 import os
 import json
+import secrets
+from string import digits, ascii_letters
 
 class Tree:
     def __init__(self, id = False, production = False, usr_data = None):  
@@ -15,6 +17,7 @@ class Tree:
         self.total_ca = int(self.elements['CACP'] + self.elements['CACP1'] + self.elements['CACV'] + self.elements['CACV1'] + self.elements['CCAASC'])
         self.net = self.network()
         self.password = self.ins_password()
+        self.cra_pass = self.generate_pass()
         if not self.id:
             id_input = input('[+] Introduce ID de Instalación: ')
             self.id = id_input
@@ -86,6 +89,10 @@ class Tree:
         for router in router_read:
             router_password = router['router_password']
         return(router_password)
+
+    def generate_pass(self, length=8): #Generación de contraseña aleatoria para usuario Ralset
+        chars = digits + ascii_letters
+        return(''.join(secrets.choice(chars) for c in range(length)))
 
     def network(self): #Lee la IP del Router y define el rango de red a seguir
         sys_request = self.erp.search('project.project', 'z_numero', self.id)
@@ -273,7 +280,7 @@ class Tree:
             }
             transmisor_1 = {
                 'name': 'TRANSMISOR PRINCIPAL',
-                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'ALARMA INALAMBRICA',
                 'TIPO': 'ETHERNET',
                 'MODELO': 'INTEGRADO',
                 'DIRECCION IP': f'{self.net}100',
@@ -284,7 +291,7 @@ class Tree:
             }
             transmisor_2 = {
                 'name': 'TRANSMISOR SECUNDARIO',
-                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'ALARMA INALAMBRICA',
                 'TIPO': 'GPRS',
                 'MODELO': 'INTEGRADO',
                 'DIRECCION IP': '',
@@ -296,7 +303,7 @@ class Tree:
 
             teclado = {
                 'name': 'ZONA 1',
-                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'ALARMA INALAMBRICA',
                 'IDENTIFICATIVO': 'TECLADO',
                 'DESCRIPCION': 'SABOTAJE TAPA TECLADO',
                 'AREA': '1',
@@ -307,7 +314,7 @@ class Tree:
             }
             sirena = {
                 'name': 'ZONA 2',
-                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'ALARMA INALAMBRICA',
                 'IDENTIFICATIVO': 'SIRENA',
                 'DESCRIPCION': 'SABOTAJE TAPA SIRENA',
                 'AREA': '1',
@@ -318,7 +325,7 @@ class Tree:
             }
             puerta = {
                 'name': 'ZONA 3',
-                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'ALARMA INALAMBRICA',
                 'IDENTIFICATIVO': 'PUERTA DEL CUARTO',
                 'DESCRIPCION': 'APERTURA PUERTA CUARTO',
                 'AREA': '1',
@@ -329,7 +336,7 @@ class Tree:
             }
             sismico = {
                 'name': 'ZONA 4',
-                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'ALARMA INALAMBRICA',
                 'IDENTIFICATIVO': 'SISMICO DEL CUARTO',
                 'DESCRIPCION': 'SISMICO DEL CUARTO',
                 'AREA': '1',
@@ -339,7 +346,7 @@ class Tree:
             }
             detector = {
                 'name': 'ZONA 5',
-                'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                'parent_id': 'ALARMA INALAMBRICA',
                 'IDENTIFICATIVO': 'DETECTOR DEL CUARTO',
                 'DESCRIPCION': 'DETECTOR VOLUMETRICO DEL CUARTO',
                 'AREA': '1',
@@ -362,7 +369,7 @@ class Tree:
             if self.total_ca >= 1:
                 multi = {
                     'name': '0',
-                    'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                    'parent_id': 'ALARMA INALAMBRICA',
                     'product_id': 'CAPA',
                     'IDENTIFICATIVO': 'MULTITRANSMITTER',
                     'DESCRIPCION': 'MULTITRANSMITTER',
@@ -375,7 +382,7 @@ class Tree:
 
                 ca = {
                     'name': '0',
-                    'parent_id': 'CACSS - SALA DE SEGURIDAD',
+                    'parent_id': 'ALARMA INALAMBRICA',
                     'IDENTIFICATIVO': '',
                     'DESCRIPCION': 'APERTURA FORZADA',
                     'AREA': '2',
@@ -432,6 +439,7 @@ class Tree:
                     'name': 'C1',
                     'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
                     'product_id': 'CVKP1',
+                    'NOMBRE': 'C1',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
                     'PUERTO HTTP': 80,
@@ -450,6 +458,7 @@ class Tree:
                     'name': 'C1',
                     'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
                     'product_id': 'CVKP2',
+                    'NOMBRE': 'C1',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
                     'PUERTO HTTP': 80,
@@ -462,6 +471,7 @@ class Tree:
                     'name': 'C2',
                     'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
                     'product_id': 'CVKP2',
+                    'NOMBRE': 'C2',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
                     'PUERTO HTTP': 80,
@@ -579,7 +589,7 @@ class Tree:
                 cacp['VCA PASSWORD'] = self.password
                 cacp['LECTOR PROXIMIDAD'] = f'LP{counter}'
                 lp_counter += 1
-                cacp['PASSWORD RALSET'] = self.password
+                cacp['PASSWORD RALSET'] = self.cra_pass
                 ccaa_list.append(cacp.copy())
 
         #Arbol CCAA Vehiculos        
@@ -598,7 +608,7 @@ class Tree:
                 cacv['LECTOR PROXIMIDAD 1'] = f'LP{lp_counter+1}'
                 cacv['LECTOR PROXIMIDAD 2'] = f'LP{lp_counter+2}'
                 lp_counter += 2
-                cacv['PASSWORD RALSET'] = self.password
+                cacv['PASSWORD RALSET'] = self.cra_pass
                 ccaa_list.append(cacv.copy())
 
         #Arbol CCAA Ascensore 
