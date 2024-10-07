@@ -1,4 +1,4 @@
-#Versión 9.2
+#Versión 10.2
 #CAMBIAR .odoo_api antes de enviar
 from odoo_api import Odoo
 from re import split
@@ -14,7 +14,7 @@ class Tree:
         self.usr_data = usr_data
         self.erp = self.requests()
         self.elements = self.ins_elements()
-        self.total_ca = int(self.elements['CACP'] + self.elements['CACP1'] + self.elements['CACV'] + self.elements['CACV1'] + self.elements['CCAASC'])
+        self.total_ca = int(self.elements['CACP'] + self.elements['CACP1'] + self.elements['CACV'] + self.elements['CACV1'] + self.elements['CCAASC']) + self.elements['CACPL']
         self.net = self.network()
         self.password = self.ins_password()
         self.cra_pass = self.generate_pass()
@@ -39,7 +39,7 @@ class Tree:
         request_read = self.erp.read(request)
         
         #Añadir aquí referencia de producto para buscar más elementos
-        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACP1', 'CACV', 'CACV1', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC', 'CAPA', 'CAPA1']
+        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACP1', 'CACV', 'CACV1', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC', 'CAPA', 'CAPA1', 'CACPL']
 
         #Añadir aquí también
         product_dict = {
@@ -54,7 +54,8 @@ class Tree:
             'CVKP2': 0,
             'CCAASC': 0,
             'CAPA': 0,
-            'CAPA1': 0
+            'CAPA1': 0,
+            'CACPL': 0
         }
 
         #Preparamos una lista con el campo de ID's de la lectura de Instalación
@@ -351,7 +352,7 @@ class Tree:
                 'DESCRIPCION': 'DETECTOR VOLUMETRICO DEL CUARTO',
                 'AREA': '1',
                 'TIPO DE DETECTOR': 'FOTODETECTOR',
-                'TIPO DE ZONA': 'INSTANTANEA',
+                'TIPO DE ZONA': 'RETARDADA',
                 'CAMARA ASOCIADA': '',
                 'CONECTADA A': 'HUB'
             }
@@ -500,6 +501,7 @@ class Tree:
         cacp1_qty = int(self.elements['CACP1'])
         cacv1_qty = int(self.elements['CACV1'])
         casc_qty = int(self.elements['CCAASC'])
+        cacpl_qty = int(self.elements['CACPL'])
         ip = self.ccaa_ip()
         esp = self.esp_ip()
         vca = self.vca_ip()
@@ -514,6 +516,7 @@ class Tree:
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'product_id': 'CACP',
+            'NOMBRE': '0',
             'DIRECCION IP': '0',
             'USUARIO': 'admin',
             'PASSWORD': '0',
@@ -535,6 +538,7 @@ class Tree:
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'product_id': 'CACV',
+            'NOMBRE': '0',
             'DIRECCION IP': '',
             'USUARIO': 'admin',
             'PASSWORD': '0',
@@ -559,6 +563,20 @@ class Tree:
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
             'product_id': 'CCAASC',
+            'NOMBRE': '0',
+            'DIRECCION IP': '0',
+            'USUARIO': 'admin',
+            'PASSWORD': '0',
+            'ESP32 IP': '0',
+            'ESP32 MAC': '0',
+            'LECTOR PROXIMIDAD': '0'
+        }
+        
+        cacpl = {
+            'name': '0',
+            'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+            'product_id': 'CACPL',
+            'NOMBRE': '0',
             'DIRECCION IP': '0',
             'USUARIO': 'admin',
             'PASSWORD': '0',
@@ -581,6 +599,7 @@ class Tree:
                 if cap >= cacp_qty:
                     cacp['product_id'] = 'CACP1'
                 cacp['name'] = f'CA{counter} - PEATONAL'
+                cacp['NOMBRE'] = f'CA{counter} Peatonal'
                 cacp['DIRECCION IP'] = f'{self.net}{ip[cap]}'
                 cacp['PASSWORD'] = self.password
                 cacp['ESP32 IP'] = f'{self.net}{esp[cap]}'
@@ -599,6 +618,7 @@ class Tree:
                 if cav >= cacv_qty:
                     cacv['product_id'] = 'CACV1'
                 cacv['name'] = f'CA{counter} - VEHICULOS'
+                cacv['NOMBRE'] = f'CA{counter} Vehiculos'
                 cacv['DIRECCION IP'] = f'{self.net}{ip[counter-1]}'
                 cacv['PASSWORD'] = self.password
                 cacv['ESP32 IP'] = f'{self.net}{esp[counter-1]}'
@@ -611,17 +631,31 @@ class Tree:
                 cacv['PASSWORD RALSET'] = self.cra_pass
                 ccaa_list.append(cacv.copy())
 
-        #Arbol CCAA Ascensore 
+        #Arbol CCAA Ascensores
         if self.elements['CCAASC'] != 0:
             for cas in range(casc_qty):
                 counter += 1
                 casc['name'] = f'CA{counter} - ASCENSORES'
+                casc['NOMBRE'] = f'CA{counter} Ascensores'
                 casc['DIRECCION IP'] = f'{self.net}{ip[counter-1]}'
                 casc['PASSWORD'] = self.password
                 casc['ESP32 IP'] = f'{self.net}{esp[counter-1]}'
                 casc['LECTOR PROXIMIDAD'] = f'LP{lp_counter}'
                 lp_counter += 1
                 ccaa_list.append(casc.copy())
+
+        #Arbol CCAA Peatonal Lite
+        if self.elements['CACPL'] != 0:
+            for capl in range(cacpl_qty):
+                counter += 1
+                cacpl['name'] = f'CA{counter} - ASCENSORES'
+                cacpl['NOMBRE'] = f'CA{counter} Peatonal Lite'
+                cacpl['DIRECCION IP'] = f'{self.net}{ip[counter-1]}'
+                cacpl['PASSWORD'] = self.password
+                cacpl['ESP32 IP'] = f'{self.net}{esp[counter-1]}'
+                cacpl['LECTOR PROXIMIDAD'] = f'LP{lp_counter}'
+                lp_counter += 1
+                ccaa_list.append(cacpl.copy())
 
         if ccaa_list:
             return(ccaa_list)
