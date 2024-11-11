@@ -1,35 +1,35 @@
-#Versión 10.2
+#Versión 1.5
 #CAMBIAR .odoo_api antes de enviar
 from odoo_api import Odoo
-from re import split
 import os
 import json
 import secrets
 from string import digits, ascii_letters
 
 class Tree:
-    def __init__(self, id = False, production = False, usr_data = None):  
+    def __init__(self, id = False, production = False, usr_data = None):
         self.id = id
         self.production = production
         self.usr_data = usr_data
         self.erp = self.requests()
         self.elements = self.ins_elements()
         self.total_ca = int(self.elements['CACP'] + self.elements['CACP1'] + self.elements['CACV'] + self.elements['CACV1'] + self.elements['CCAASC']) + self.elements['CACPL']
-        self.net = self.network()
-        self.password = self.ins_password()
+        self.net = self.router_data()['network']
+        self.password = self.router_data()['password']
+        self.sys_id = self.router_data()['id']
         self.cra_pass = self.generate_pass()
         if not self.id:
             id_input = input('[+] Introduce ID de Instalación: ')
             self.id = id_input
-        
+
     def requests(self):
-        if not self.production:   
+        if not self.production:
             act_dir = os.path.dirname(__file__)
             dat_dir = os.path.join(act_dir, 'user.json')
             with open(dat_dir, 'r') as usr_file:
                 usr_data = json.load(usr_file)
         else:
-            usr_data = self.usr_data   
+            usr_data = self.usr_data
         erp_data = Odoo(usr_data['url'], usr_data['db'], usr_data['username'], usr_data['password'])
         return(erp_data)
 
@@ -37,9 +37,9 @@ class Tree:
         #Lectura de ID's de Instalación
         request = self.erp.search('project.project', 'z_numero', self.id)
         request_read = self.erp.read(request)
-        
+
         #Añadir aquí referencia de producto para buscar más elementos
-        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACP1', 'CACV', 'CACV1', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC', 'CAPA', 'CAPA1', 'CACPL']
+        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACP1', 'CACV', 'CACV1', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC', 'CAPA', 'CAPA1', 'CACPL', 'CCPASC', 'CCASC']
 
         #Añadir aquí también
         product_dict = {
@@ -55,59 +55,68 @@ class Tree:
             'CCAASC': 0,
             'CAPA': 0,
             'CAPA1': 0,
-            'CACPL': 0
+            'CACPL': 0,
+            'CCPASC': 0,
+            'CCASC': 0
         }
 
         #Preparamos una lista con el campo de ID's de la lectura de Instalación
-        for x in request_read:
-            elem_id = x['z_equipo_ids']
+        if request_read is not None and isinstance(request_read, list) and len(request_read) > 0:
+            elem_ids = set()
 
-        #Hacemos un bucle sobre los diferentes tipos de elementos
-        #El bucle hace otra llamada a los códigos de productos
-        #Seteamos la lista de ID's de instalación y las de productos
-        #Iteramos sobre los sets buscando las intersecciones y los ponemos en un diccionario de cantidades
-        for product in product_list:
-            elem_req = self.erp.search('sale.order.line', 'product_id.default_code', product)
-            elem_list = set(elem_req)
-            id_list = set(elem_id)
-            rep_elem = id_list.intersection(elem_list)
-            if rep_elem:
-                ins_list = list(rep_elem)
-                ins_list_read = self.erp.read(ins_list) 
-                for y in ins_list_read:
-                    ins_num = int(y['product_uom_qty'])
-                    product_dict[product] = ins_num
-        return(product_dict)
-       
-    def ins_password(self): #Busca la contraseña de la instalación
+            #for x in request_read:
+            #    elem_id = x['z_equipo_ids']
+
+            for x in request_read:
+                if 'z_equipo_ids' in x and isinstance(x['z_equipo_ids'], list):
+                    elem_ids.update(x['z_equipo_ids'])
+
+            for product in product_list:
+                elem_req = self.erp.search('sale.order.line', 'product_id.default_code', product)
+
+                if elem_req is not None and isinstance(elem_req, list):
+                    elem_list = set(elem_req)
+                    id_list = set(elem_ids)
+                    rep_elem = id_list.intersection(elem_list)
+
+                    if rep_elem:
+                        ins_list = list(rep_elem)
+                        ins_list_read = self.erp.read(ins_list)
+                        if ins_list_read is not None and isinstance(ins_list_read, list):
+                            for y in ins_list_read:
+                                ins_num = int(y.get('product_uom_qty', 0))
+                                product_dict[product] = ins_num
+            return(product_dict)
+        return {}
+
+    def router_data(self): #Request a Odoo buscando datos del router del sistema
         sys_request = self.erp.search('project.project', 'z_numero', self.id)
         sys_read = self.erp.read(sys_request)
-        for sys in sys_read:
-            sys_id = sys['z_sistema_id']
-        
-        router_request = self.erp.search('altatec.router', 'sistema_id', sys_id[0])
-        router_read = self.erp.read(router_request)
-        for router in router_read:
-            router_password = router['router_password']
-        return(router_password)
+        if sys_read is not None and isinstance(sys_read, list) and len(sys_read) > 0:
+            sys_id = sys_read[0].get('z_sistema_id', None)
+
+            if sys_id is not None and isinstance(sys_id, list) and len(sys_id) > 0:
+                router_request = self.erp.search('altatec.router', 'sistema_id', sys_id[0])
+                router_read = self.erp.read(router_request)
+                if router_read is not None and isinstance(router_read, list) and len(router_read) > 0:
+                    for router in router_read:
+                        router_password = router.get('router_password', '')
+                        router_ip = router.get('ip_cctv', '')
+
+                        if router_ip:
+                            ip = router_ip.split('.')
+                            net = str(ip[0] + '.' + ip[1] + '.' + ip[2] + '.')
+                        else:
+                            net = ''
+
+                        return {'id': sys_id,
+                                'network': net,
+                                'password': router_password}
+        return {'details': 'Router reequest error'}
 
     def generate_pass(self, length=8): #Generación de contraseña aleatoria para usuario Ralset
         chars = digits + ascii_letters
         return(''.join(secrets.choice(chars) for c in range(length)))
-
-    def network(self): #Lee la IP del Router y define el rango de red a seguir
-        sys_request = self.erp.search('project.project', 'z_numero', self.id)
-        sys_read = self.erp.read(sys_request)
-        for sys in sys_read:
-            sys_id = sys['z_sistema_id']
-        
-        router_request = self.erp.search('altatec.router', 'sistema_id', sys_id[0])
-        router_read = self.erp.read(router_request)
-        for router in router_read:
-            router_ip = router['ip_cctv']
-        ip = router_ip.split('.')
-        net = str(ip[0] + '.' + ip[1] + '.' + ip[2] + '.') 
-        return(net)
 
     def nvr_ip(self): #Listado con IP de Host de Grabadores
         nvr_qty = int(self.elements['CVCSG'])
@@ -131,6 +140,9 @@ class Tree:
         else:
             return("Cantidad no soportada")
 
+    #-----------------
+    #GRABADOR NVR CCTV
+    #-----------------
     def nvr_tree(self): #Arbol del "Elemento" NVRx con todas sus propiedades
         nvr_list = []
         nvr = {
@@ -150,8 +162,8 @@ class Tree:
             'PASSWORD': '0'
         }
 
-        ip = Tree.nvr_ip(self)
-        
+        ip = self.nvr_ip()
+
         for n in range(len(ip)):
             nvr['name'] = f'NVR{n+1}'
             nvr['NOMBRE'] = f'NVR{n+1}'
@@ -187,8 +199,11 @@ class Tree:
         else:
             return("Cantidad no soportada")
 
+    #------------
+    #CÁMARAS CCTV
+    #------------
     def camera_tree(self): #Arbol del "Elemento" CxNx con todas las propiedades
-        ip = Tree.camera_ip(self)
+        ip = self.camera_ip()
         camera_list = []
         camera = {
             'name': '0',
@@ -231,7 +246,7 @@ class Tree:
             return(camera_list)
         else:
             return(False)
- 
+
     def ccaa_ip(self): #Genera las IP de Host de CCAA
         ip_start = 125
         ip_final = self.total_ca +125 -1
@@ -251,7 +266,7 @@ class Tree:
             ip_start += 1
             ip_list.append(ip_start)
         return(ip_list)
-    
+
     def esp_ip(self): #Genera IP de Host de ESP32 de CCAA
         ip_start = 205
         ip_final = self.total_ca +205 -1
@@ -261,11 +276,13 @@ class Tree:
             ip_start += 1
             ip_list.append(ip_start)
         return(ip_list)
-                
-    def sec_room(self): #Arbol de "Elemento" Sala de Seguridad (Redefiniendo Producto)
+
+    #-----------------
+    #SALA DE SEGURIDAD
+    #-----------------
+    def sec_room(self):
         if self.elements['CACSS'] == 1: 
             ajax = []
-            
             hub = {
                 'name': 'ALARMA INALAMBRICA',
                 'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
@@ -392,14 +409,14 @@ class Tree:
                     'CAMARA ASOCIADA': '',
                     'CONECTADA A': 'MULTITRANSMITTER'
                 }
-                
+
                 multi_counter = 0
 
                 #Generación de elemento "Multitransmitter" en "Sala de Seguridad" en caso de existir CCAA's
                 if self.total_ca <= 16:
                     multi['name'] = 'ZONA 6'
                     ajax.append(multi.copy())
-                                                        
+
                 elif self.total_ca >= 17 and self.total_ca <= 32:
                     multi['name'] = 'ZONA 6'
                     ajax.append(multi.copy())
@@ -421,17 +438,19 @@ class Tree:
                 else:
                     pass
 
-            for c in range(self.total_ca):
-                ca['name'] = f'ZONA {c+multi_counter+7}'
-                ca['IDENTIFICATIVO'] = f'CA{c+1}'
-                ca['CAMARA ASOCIADA'] = f'V{c+1}CA{c+1}'
-                ajax.append(ca.copy())
-   
+                for c in range(self.total_ca):
+                    ca['name'] = f'ZONA {c+multi_counter+7}'
+                    ca['IDENTIFICATIVO'] = f'CA{c+1}'
+                    ca['CAMARA ASOCIADA'] = f'V{c+1}CA{c+1}'
+                    ajax.append(ca.copy()) 
 
             return(ajax)
         else:
             return(False)
 
+    #----------
+    #KIT PORTAL
+    #----------
     def kit_portal(self): #Arbol de generación para "Kit Portal" de 1 o 2 cámaras
         if self.elements['CVKP1'] or self.elements['CVKP2'] == 1:
             portal = []
@@ -449,7 +468,7 @@ class Tree:
                     'USUARIO': 'admin',
                     'PASSWORD': ''
                 }
-                
+
                 c1['DIRECCION IP'] = f'{self.net}16'
                 c1['PASSWORD'] = f'{self.password}'
                 portal.append(c1)
@@ -488,28 +507,28 @@ class Tree:
                 portal.append(c1)
                 portal.append(c2)
 
-            return(portal)                
+            return(portal)
         else:
             return(False)
-     
-    def ccaa_tree(self): #Función testing para arbol CCAA
-        #---------
+
+    #-------------------
+    #CONTROLES DE ACCESO
+    #-------------------
+    def ccaa_tree(self): 
+
         #Variables
-        #---------
-        cacp_qty = int(self.elements['CACP'])
-        cacv_qty = int(self.elements['CACV'])
-        cacp1_qty = int(self.elements['CACP1'])
-        cacv1_qty = int(self.elements['CACV1'])
-        casc_qty = int(self.elements['CCAASC'])
-        cacpl_qty = int(self.elements['CACPL'])
+        cacp_qty = int(self.elements['CACP']) #Peatonal
+        cacv_qty = int(self.elements['CACV']) #Vehículos
+        cacp1_qty = int(self.elements['CACP1']) #Peatonal 1
+        cacv1_qty = int(self.elements['CACV1']) #Vehículos 1
+        casc_qty = int(self.elements['CCAASC']) #Ascensores
+        cacpl_qty = int(self.elements['CACPL']) #Portal
         ip = self.ccaa_ip()
         esp = self.esp_ip()
         vca = self.vca_ip()
 
-        #----------------------------
-        #Listas de elementos de arbol
-        #----------------------------
 
+        #Listas de elementos de arbol
         ccaa_list = []
 
         cacp = {
@@ -533,7 +552,7 @@ class Tree:
             'USUARIO RALSET': 'RALSET',
             'PASSWORD RALSET': '0'
         }
-        
+
         cacv = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
@@ -558,7 +577,7 @@ class Tree:
             'USUARIO RALSET': 'RALSET',
             'PASSWORD RALSET': '0'
         }
-        
+
         casc = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
@@ -571,7 +590,7 @@ class Tree:
             'ESP32 MAC': '0',
             'LECTOR PROXIMIDAD': '0'
         }
-        
+
         cacpl = {
             'name': '0',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
@@ -585,14 +604,11 @@ class Tree:
             'LECTOR PROXIMIDAD': '0'
         }
 
-        #---------------------
         #Modificación de datos
-        #---------------------
-
         counter = 0
         lp_counter = 0
 
-        #Arbol CCAA Peatonal    
+        #Arbol CCAA Peatonal
         if self.elements['CACP'] or self.elements['CACP1'] != 0:
             for cap in range(cacp_qty + cacp1_qty):
                 counter += 1
@@ -611,7 +627,7 @@ class Tree:
                 cacp['PASSWORD RALSET'] = self.cra_pass
                 ccaa_list.append(cacp.copy())
 
-        #Arbol CCAA Vehiculos        
+        #Arbol CCAA Vehiculos
         if self.elements['CACV'] or self.elements['CACV1'] != 0:
             for cav in range(cacv_qty + cacv1_qty):
                 counter += 1
@@ -640,7 +656,7 @@ class Tree:
                 casc['DIRECCION IP'] = f'{self.net}{ip[counter-1]}'
                 casc['PASSWORD'] = self.password
                 casc['ESP32 IP'] = f'{self.net}{esp[counter-1]}'
-                casc['LECTOR PROXIMIDAD'] = f'LP{lp_counter}'
+                casc['LECTOR PROXIMIDAD'] = f'LP{lp_counter+1}'
                 lp_counter += 1
                 ccaa_list.append(casc.copy())
 
@@ -648,12 +664,12 @@ class Tree:
         if self.elements['CACPL'] != 0:
             for capl in range(cacpl_qty):
                 counter += 1
-                cacpl['name'] = f'CA{counter} - ASCENSORES'
+                cacpl['name'] = f'CA{counter} - PEATONAL LITE'
                 cacpl['NOMBRE'] = f'CA{counter} Peatonal Lite'
                 cacpl['DIRECCION IP'] = f'{self.net}{ip[counter-1]}'
                 cacpl['PASSWORD'] = self.password
                 cacpl['ESP32 IP'] = f'{self.net}{esp[counter-1]}'
-                cacpl['LECTOR PROXIMIDAD'] = f'LP{lp_counter}'
+                cacpl['LECTOR PROXIMIDAD'] = f'LP{lp_counter+1}'
                 lp_counter += 1
                 ccaa_list.append(cacpl.copy())
 
@@ -662,10 +678,14 @@ class Tree:
         else:
             return(False)
 
+    #----------------
+    #MULTITRANSMITTER
+    #----------------
     def capa_tree(self):
-        
+
         capa_list = []
 
+        #Multi estandar
         capa = {
             'name': '',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
@@ -674,6 +694,7 @@ class Tree:
             'ESP32 MAC': ''
         }
 
+        #Multi con Ayax
         capa1 = {
             'name': '',
             'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
@@ -688,21 +709,67 @@ class Tree:
                 capa['name'] = f'CAPA {cap+1}'
                 capa['ESP32 IP'] = f'{self.net}{5+cap}'
                 capa_list.append(capa.copy())
-      
+
         if self.elements['CAPA1'] != 0:
             for cap1 in range(self.elements['CAPA']):
                 capa1['name'] = f'CAPA {cap1+1}'
                 capa1['ESP32 IP'] = f'{self.net}{5+cap1}'
                 capa1['NVR IP'] = f'{self.net}{121+cap1}'
                 capa_list.append(capa1.copy())
-        
+
         if capa_list:
             return(capa_list)
         else:
             return(False)
 
+    #----------
+    #ASCENSORES
+    #----------
+    def lifter_tree(self):
+
+        #Pasarela de Ascensor
+        ccpasc_list = []
+        ccpasc = {'name': '',
+                    'parent_id': 'CCCC - CENTRO DE COMUNICACIONES',
+                    'product_id': 'CCPASC',
+                    'ID AP TX': 'MAESTRO - TECHO HUECO DEL ASCENSOR',
+                    'IP AP TX': '',
+                    'PUERTO HTTP AP TX': '80',
+                    'MAC AP TX': '',
+                    'USUARIO AP TX': 'admin',
+                    'PASSWORD AP TX': self.password,
+                    'SSID AP TX': '',
+                    'PASSWORD WIFI AP TX': self.password,
+                    'ID AP RX': 'ESCLAVO - CABINA ASCENSOR',
+                    'IP AP RX': '',
+                    'PUERTO HTTP RX': '80',
+                    'MAC AP RX': '',
+                    'USUARIO AP RX': 'admin',
+                    'PASSWORD AP RX': self.password,
+                    'SSID AP RX': '',
+                    'PASSWORD WIFI AP RX': self.password,
+                    'MODELO ANTENAS': ''}
+
+        ip_count = 0
+        qty_count = 1
+        if self.elements['CCPASC'] != 0:
+            for asc in range(self.elements['CCPASC']):
+                ccpasc['name'] = f'CCPASC {asc+1}'
+                ccpasc['IP AP TX'] = f'{self.net}{245+ip_count}'
+                ip_count += 1
+                ccpasc['SSID AP TX'] = f'ascensor{qty_count}-{self.sys_id[0]}'
+
+                ccpasc['IP AP RX'] = f'{self.net}{245+ip_count}'
+                ip_count += 1
+                ccpasc['SSID AP RX'] = f'ascensor{qty_count}-{self.sys_id[0]}'
+                qty_count += 1
+
+                ccpasc_list.append(ccpasc.copy())
+
+        return ccpasc_list
+
     def run(self): #Ejecuta el arboleador al completo
-        
+
         elements_tree = []
         elements_tree.append(self.nvr_tree())
         elements_tree.append(self.camera_tree())
@@ -710,5 +777,6 @@ class Tree:
         elements_tree.append(self.capa_tree())
         elements_tree.append(self.ccaa_tree())
         elements_tree.append(self.kit_portal())
-        
-        return(elements_tree)
+        elements_tree.append(self.lifter_tree())
+
+        return elements_tree

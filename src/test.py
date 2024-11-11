@@ -1,9 +1,9 @@
 
 from tree import Tree
 
-tree = Tree('IN10346')
+tree = Tree('IN10360')
 
 #elems = tree.cra_pass()
-runeo = tree.run()
+test = tree.run()
 
-print(runeo)
+print(test)
