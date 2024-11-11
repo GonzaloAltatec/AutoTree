@@ -118,6 +118,9 @@ class Tree:
         chars = digits + ascii_letters
         return(''.join(secrets.choice(chars) for c in range(length)))
 
+    #-----------------
+    #GRABADOR NVR CCTV
+    #-----------------
     def nvr_ip(self): #Listado con IP de Host de Grabadores
         nvr_qty = int(self.elements['CVCSG'])
         nvr_ip_final = nvr_qty + 10
@@ -140,9 +143,6 @@ class Tree:
         else:
             return("Cantidad no soportada")
 
-    #-----------------
-    #GRABADOR NVR CCTV
-    #-----------------
     def nvr_tree(self): #Arbol del "Elemento" NVRx con todas sus propiedades
         nvr_list = []
         nvr = {
@@ -159,7 +159,7 @@ class Tree:
             'PUERTO SDK': '8000',
             'PUERTO RTSP': '554',
             'USUARIO': 'admin',
-            'PASSWORD': '0'
+            'PASSWORD': self.password
         }
 
         ip = self.nvr_ip()
@@ -169,7 +169,6 @@ class Tree:
             nvr['NOMBRE'] = f'NVR{n+1}'
             nvr['DIRECCION IP'] = f'{self.net}{ip[n]}'
             nvr['PUERTA DE ENLACE'] = f'{self.net}1'
-            nvr['PASSWORD'] = f'{self.password}'
             nvr_list.append(nvr.copy())
 
         if self.elements['CVCSG'] != 0:
@@ -177,8 +176,11 @@ class Tree:
         else:
             return(False)
 
+    #------------
+    #CÁMARAS CCTV
+    #------------
     def camera_ip(self): #Listado de las IP de Host de las Cámaras
-        cam_qty = int(self.elements['CVCCV'])
+        cam_qty = int(self.elements['CVCCV']) + int(self.elements['CCASC'])
         cam_ip_final = cam_qty + 16 -1
 
         cam_list = [16]
@@ -199,16 +201,13 @@ class Tree:
         else:
             return("Cantidad no soportada")
 
-    #------------
-    #CÁMARAS CCTV
-    #------------
     def camera_tree(self): #Arbol del "Elemento" CxNx con todas las propiedades
         ip = self.camera_ip()
         camera_list = []
         camera = {
             'name': '0',
             'parent_id': '',
-            'product_id': 'CVCCV',
+            'product_id': '',
             'NOMBRE': '0',
             'WDR ACTIVADO': 'SI/NO',
             'DIRECCION IP': '0',
@@ -216,16 +215,17 @@ class Tree:
             'PUERTO SDK': '8000',
             'PUERTO RTSP': '554',
             'USUARIO': 'admin',
-            'PASSWORD': '0'
+            'PASSWORD': self.password
         }
 
         nvr_num = 1
         cam_num = 1
-
-        for n in range(len(ip)):
+        counter = 0
+        for n in range(len(ip) - self.elements['CCASC']):
             camera['name'] = f'C{cam_num}N{nvr_num}'
-            camera['NOMBRE'] = f'C{cam_num}N{nvr_num}'
             camera['parent_id'] = f'NVR{nvr_num}'
+            camera['product_id'] = 'CVCCV'
+            camera['NOMBRE'] = f'C{cam_num}N{nvr_num}'
             cam_num += 1
             if n == 19:
                 nvr_num += 1
@@ -240,42 +240,56 @@ class Tree:
                 nvr_num += 1
                 cam_num = 1
             camera['DIRECCION IP'] = f'{self.net}{ip[n]}'
-            camera['PASSWORD'] = f'{self.password}'
             camera_list.append(camera.copy())
-        if self.elements['CVCCV'] != 0:
+            counter += 1
+            if counter == len(ip) - self.elements['CCASC']:
+                camera['name'] = f'C{cam_num}N{nvr_num} - ASCENSOR'
+                camera['parent_id'] = f'NVR{nvr_num}'
+                camera['product_id'] = 'CCASC'
+                camera['NOMBRE'] = f'C{cam_num}N{nvr_num}'
+                cam_num += 1
+                if n == 19:
+                    nvr_num += 1
+                    cam_num = 1
+                if n == 39:
+                    nvr_num += 1
+                    cam_num = 1
+                if n == 59:
+                    nvr_num += 1
+                    cam_num = 1
+                if n == 79:
+                    nvr_num += 1
+                    cam_num = 1
+                camera['DIRECCION IP'] = f'{self.net}{ip[counter]}'
+                camera_list.append(camera.copy())
+
+
+            #for n in range(self.elements['CCASC']):
+            #    camera['name'] = f'C{cam_num}N{nvr_num}'
+            #    camera['parent_id'] = f'NVR{nvr_num}'
+            #    camera['product_id'] = 'CCASC'
+            #    camera['NOMBRE'] = f'C{cam_num}N{nvr_num} - ASCENSOR'
+            #    cam_num += 1
+            #    if n == 19:
+            #        nvr_num += 1
+            #        cam_num = 1
+            #    if n == 39:
+            #        nvr_num += 1
+            #        cam_num = 1
+            #    if n == 59:
+            #        nvr_num += 1
+            #        cam_num = 1
+            #    if n == 79:
+            #        nvr_num += 1
+            #        cam_num = 1
+            #    camera['DIRECCION IP'] = f'{self.net}{ip[n]}'
+            #    camera_list.append(camera.copy())
+
+        if camera_list is not None:
             return(camera_list)
         else:
             return(False)
 
-    def ccaa_ip(self): #Genera las IP de Host de CCAA
-        ip_start = 125
-        ip_final = self.total_ca +125 -1
-        ip_list = [125]
-
-        while ip_final > ip_list[-1]:
-            ip_start += 1
-            ip_list.append(ip_start)
-        return(ip_list)
-
-    def vca_ip(self): #Genera IP de Host de Cámaras de CCAA (VCA)
-        ip_start = 165
-        ip_final = self.total_ca +165 -1
-        ip_list = [165]
-
-        while ip_final > ip_list[-1]:
-            ip_start += 1
-            ip_list.append(ip_start)
-        return(ip_list)
-
-    def esp_ip(self): #Genera IP de Host de ESP32 de CCAA
-        ip_start = 205
-        ip_final = self.total_ca +205 -1
-        ip_list = [205]
-
-        while ip_final > ip_list[-1]:
-            ip_start += 1
-            ip_list.append(ip_start)
-        return(ip_list)
 
     #-----------------
     #SALA DE SEGURIDAD
@@ -514,8 +528,37 @@ class Tree:
     #-------------------
     #CONTROLES DE ACCESO
     #-------------------
-    def ccaa_tree(self): 
+    def ccaa_ip(self): #Genera las IP de Host de CCAA
+        ip_start = 125
+        ip_final = self.total_ca +125 -1
+        ip_list = [125]
 
+        while ip_final > ip_list[-1]:
+            ip_start += 1
+            ip_list.append(ip_start)
+        return(ip_list)
+
+    def vca_ip(self): #Genera IP de Host de Cámaras de CCAA (VCA)
+        ip_start = 165
+        ip_final = self.total_ca +165 -1
+        ip_list = [165]
+
+        while ip_final > ip_list[-1]:
+            ip_start += 1
+            ip_list.append(ip_start)
+        return(ip_list)
+
+    def esp_ip(self): #Genera IP de Host de ESP32 de CCAA
+        ip_start = 205
+        ip_final = self.total_ca +205 -1
+        ip_list = [205]
+
+        while ip_final > ip_list[-1]:
+            ip_start += 1
+            ip_list.append(ip_start)
+        return(ip_list)
+
+    def ccaa_tree(self): 
         #Variables
         cacp_qty = int(self.elements['CACP']) #Peatonal
         cacv_qty = int(self.elements['CACV']) #Vehículos
@@ -674,9 +717,9 @@ class Tree:
                 ccaa_list.append(cacpl.copy())
 
         if ccaa_list:
-            return(ccaa_list)
+            return ccaa_list
         else:
-            return(False)
+            return False
 
     #----------------
     #MULTITRANSMITTER
@@ -718,9 +761,9 @@ class Tree:
                 capa_list.append(capa1.copy())
 
         if capa_list:
-            return(capa_list)
+            return capa_list
         else:
-            return(False)
+            return False
 
     #----------
     #ASCENSORES
@@ -766,7 +809,10 @@ class Tree:
 
                 ccpasc_list.append(ccpasc.copy())
 
-        return ccpasc_list
+        if ccpasc_list is not None:
+            return ccpasc_list
+        else:
+            return False
 
     def run(self): #Ejecuta el arboleador al completo
 
