@@ -1,3 +1,4 @@
+env/
 src/user.json
 .git
 **/__pycache__/

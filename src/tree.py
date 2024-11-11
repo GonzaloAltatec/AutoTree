@@ -263,28 +263,6 @@ class Tree:
                 camera['DIRECCION IP'] = f'{self.net}{ip[counter]}'
                 camera_list.append(camera.copy())
 
-
-            #for n in range(self.elements['CCASC']):
-            #    camera['name'] = f'C{cam_num}N{nvr_num}'
-            #    camera['parent_id'] = f'NVR{nvr_num}'
-            #    camera['product_id'] = 'CCASC'
-            #    camera['NOMBRE'] = f'C{cam_num}N{nvr_num} - ASCENSOR'
-            #    cam_num += 1
-            #    if n == 19:
-            #        nvr_num += 1
-            #        cam_num = 1
-            #    if n == 39:
-            #        nvr_num += 1
-            #        cam_num = 1
-            #    if n == 59:
-            #        nvr_num += 1
-            #        cam_num = 1
-            #    if n == 79:
-            #        nvr_num += 1
-            #        cam_num = 1
-            #    camera['DIRECCION IP'] = f'{self.net}{ip[n]}'
-            #    camera_list.append(camera.copy())
-
         if camera_list is not None:
             return(camera_list)
         else:
