@@ -1,4 +1,4 @@
-#Versión 1.5
+#Versión 1.6
 #CAMBIAR .odoo_api antes de enviar
 from odoo import Odoo
 import os
@@ -446,13 +446,14 @@ class Tree:
     #----------
     def kit_portal(self): #Arbol de generación para "Kit Portal" de 1 o 2 cámaras
         if self.elements['CVKP1'] or self.elements['CVKP2'] == 1:
+
             portal = []
-            if self.elements['CVKP1'] == 1:
-                c1 = {
-                    'name': 'C1',
+
+            cx = {
+                    'name': '',
                     'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'product_id': 'CVKP1',
-                    'NOMBRE': 'C1',
+                    'product_id': '',
+                    'NOMBRE': '',
                     'WDR ACTIVADO': 'SI/NO',
                     'DIRECCION IP': 0,
                     'PUERTO HTTP': 80,
@@ -462,43 +463,33 @@ class Tree:
                     'PASSWORD': ''
                 }
 
-                c1['DIRECCION IP'] = f'{self.net}16'
-                c1['PASSWORD'] = f'{self.password}'
-                portal.append(c1)
+            if self.elements['CVKP1'] == 1:
+                cx['name'] = 'C1'
+                cx['product_id'] = 'CVKP1'
+                cx['NOMBRE'] = 'C1'
+                cx['DIRECCION IP'] = f'{self.net}16'
+                cx['PASSWORD'] = f'{self.password}'
+                portal.append(cx)
 
             elif self.elements['CVKP2'] == 1:
-                c1 = {
-                    'name': 'C1',
-                    'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'product_id': 'CVKP2',
-                    'NOMBRE': 'C1',
-                    'WDR ACTIVADO': 'SI/NO',
-                    'DIRECCION IP': 0,
-                    'PUERTO HTTP': 80,
-                    'PUERTO SDK': 8000,
-                    'PUERTO RTSP': 554,
-                    'USUARIO': 'admin',
-                    'PASSWORD': ''
-                }
-                c2 = {
-                    'name': 'C2',
-                    'parent_id': 'ROUTER PARA PORTAL PROTEGIDO',
-                    'product_id': 'CVKP2',
-                    'NOMBRE': 'C2',
-                    'WDR ACTIVADO': 'SI/NO',
-                    'DIRECCION IP': 0,
-                    'PUERTO HTTP': 80,
-                    'PUERTO SDK': 8000,
-                    'PUERTO RTSP': 554,
-                    'USUARIO': 'admin',
-                    'PASSWORD': ''
-                }
-                c1['DIRECCION IP'] = f'{self.net}16'
-                c1['PASSWORD'] = f'{self.password}'
-                c2['DIRECCION IP'] = f'{self.net}17'
-                c2['PASSWORD'] = f'{self.password}'
-                portal.append(c1)
-                portal.append(c2)
+                for x in range(1, 3):
+                    cx_cp = cx.copy()
+                    cx_cp['name'] = f'C{x}'
+                    cx_cp['product_id'] = 'CVKP2'
+                    cx_cp['NOMBRE'] = f'C{x}'
+                    cx_cp['DIRECCION IP'] = f'{self.net}{15+x}'
+                    cx_cp['PASSWORD'] = f'{self.password}'
+                    portal.append(cx_cp)
+
+            if self.elements['CAKPP'] >= 1:
+                for x in range(self.elements['CAKPP']):
+                    cx_cp = cx.copy()
+                    cx_cp['name'] = f'C{3+x}'
+                    cx_cp['product_id'] = 'CVKP2'
+                    cx_cp['NOMBRE'] = f'C{3+x}'
+                    cx_cp['DIRECCION IP'] = f'{self.net}{15+3+x}'
+                    cx_cp['PASSWORD'] = f'{self.password}'
+                    portal.append(cx_cp)
 
             return(portal)
         else:
