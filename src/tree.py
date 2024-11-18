@@ -1,4 +1,4 @@
-#Versión 1.6
+#Versión 1.7
 #CAMBIAR .odoo_api antes de enviar
 from odoo import Odoo
 import os
