@@ -39,7 +39,7 @@ class Tree:
         request_read = self.erp.read(request)
 
         #Añadir aquí referencia de producto para buscar más elementos
-        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACP1', 'CACV', 'CACV1', 'CACSS', 'CVKP1', 'CVKP2', 'CCAASC', 'CAPA', 'CAPA1', 'CACPL', 'CCPASC', 'CCASC']
+        product_list = ['CVCCV', 'CVCSG', 'CACP', 'CACP1', 'CACV', 'CACV1', 'CACSS', 'CVKP1', 'CVKP2', 'CAKPP', 'CCAASC', 'CAPA', 'CAPA1', 'CACPL', 'CCPASC', 'CCASC']
 
         #Añadir aquí también
         product_dict = {
@@ -52,6 +52,7 @@ class Tree:
             'CACSS': 0,
             'CVKP1': 0,
             'CVKP2': 0,
+            'CAKPP': 0,
             'CCAASC': 0,
             'CAPA': 0,
             'CAPA1': 0,
@@ -63,9 +64,6 @@ class Tree:
         #Preparamos una lista con el campo de ID's de la lectura de Instalación
         if request_read is not None and isinstance(request_read, list) and len(request_read) > 0:
             elem_ids = set()
-
-            #for x in request_read:
-            #    elem_id = x['z_equipo_ids']
 
             for x in request_read:
                 if 'z_equipo_ids' in x and isinstance(x['z_equipo_ids'], list):
@@ -86,8 +84,7 @@ class Tree:
                             for y in ins_list_read:
                                 ins_num = int(y.get('product_uom_qty', 0))
                                 product_dict[product] = ins_num
-            return(product_dict)
-        return {}
+        return(product_dict)
 
     def router_data(self): #Request a Odoo buscando datos del router del sistema
         sys_request = self.erp.search('project.project', 'z_numero', self.id)
@@ -114,7 +111,8 @@ class Tree:
                                 'password': router_password}
         return {'details': 'Router reequest error'}
 
-    def generate_pass(self, length=8): #Generación de contraseña aleatoria para usuario Ralset
+    #Generación de contraseña aleatoria para usuario Ralset
+    def generate_pass(self, length=8):
         chars = digits + ascii_letters
         return(''.join(secrets.choice(chars) for c in range(length)))
 
@@ -189,63 +187,44 @@ class Tree:
         if cam_ip_final == 16:
             return(cam_list)
         elif cam_ip_final > 16 and cam_ip_final < 120:
-            while cam_ip_inicio < cam_ip_final: 
+            while cam_ip_inicio < cam_ip_final:
                 cam_ip_inicio += 1
                 cam_list.append(cam_ip_inicio)
             return(cam_list)
         elif cam_ip_final == 120:
-            while cam_ip_inicio < cam_ip_final: 
+            while cam_ip_inicio < cam_ip_final:
                 cam_ip_inicio += 1
                 cam_list.append(cam_ip_inicio)
             return(cam_list)
         else:
-            return("Cantidad no soportada")
+            return('Cantidad no soportada')
 
     def camera_tree(self): #Arbol del "Elemento" CxNx con todas las propiedades
         ip = self.camera_ip()
-        camera_list = []
-        camera = {
-            'name': '0',
-            'parent_id': '',
-            'product_id': '',
-            'NOMBRE': '0',
-            'WDR ACTIVADO': 'SI/NO',
-            'DIRECCION IP': '0',
-            'PUERTO HTTP': '80',
-            'PUERTO SDK': '8000',
-            'PUERTO RTSP': '554',
-            'USUARIO': 'admin',
-            'PASSWORD': self.password
-        }
+        if ip is not None and isinstance(ip, list):
+            ip = self.camera_ip()
+            camera_list = []
+            camera = {
+                'name': '0',
+                'parent_id': '',
+                'product_id': '',
+                'NOMBRE': '0',
+                'WDR ACTIVADO': 'SI/NO',
+                'DIRECCION IP': '0',
+                'PUERTO HTTP': '80',
+                'PUERTO SDK': '8000',
+                'PUERTO RTSP': '554',
+                'USUARIO': 'admin',
+                'PASSWORD': self.password
+            }
 
-        nvr_num = 1
-        cam_num = 1
-        counter = 0
-        for n in range(len(ip) - self.elements['CCASC']):
-            camera['name'] = f'C{cam_num}N{nvr_num}'
-            camera['parent_id'] = f'NVR{nvr_num}'
-            camera['product_id'] = 'CVCCV'
-            camera['NOMBRE'] = f'C{cam_num}N{nvr_num}'
-            cam_num += 1
-            if n == 19:
-                nvr_num += 1
-                cam_num = 1
-            if n == 39:
-                nvr_num += 1
-                cam_num = 1
-            if n == 59:
-                nvr_num += 1
-                cam_num = 1
-            if n == 79:
-                nvr_num += 1
-                cam_num = 1
-            camera['DIRECCION IP'] = f'{self.net}{ip[n]}'
-            camera_list.append(camera.copy())
-            counter += 1
-            if counter == len(ip) - self.elements['CCASC']:
-                camera['name'] = f'C{cam_num}N{nvr_num} - ASCENSOR'
+            nvr_num = 1
+            cam_num = 1
+            counter = 0
+            for n in range(len(ip) - self.elements['CCASC']):
+                camera['name'] = f'C{cam_num}N{nvr_num}'
                 camera['parent_id'] = f'NVR{nvr_num}'
-                camera['product_id'] = 'CCASC'
+                camera['product_id'] = 'CVCCV'
                 camera['NOMBRE'] = f'C{cam_num}N{nvr_num}'
                 cam_num += 1
                 if n == 19:
@@ -260,14 +239,36 @@ class Tree:
                 if n == 79:
                     nvr_num += 1
                     cam_num = 1
-                camera['DIRECCION IP'] = f'{self.net}{ip[counter]}'
+                camera['DIRECCION IP'] = f'{self.net}{ip[n]}'
                 camera_list.append(camera.copy())
+                counter += 1
+                #Cámaras ascensores (En NVR)
+                if self.elements['CCASC'] > 0:
+                    if counter == len(ip) - self.elements['CCASC']:
+                        camera['name'] = f'C{cam_num}N{nvr_num} - ASCENSOR'
+                        camera['parent_id'] = f'NVR{nvr_num}'
+                        camera['product_id'] = 'CCASC'
+                        camera['NOMBRE'] = f'C{cam_num}N{nvr_num}'
+                        cam_num += 1
+                        if n == 19:
+                            nvr_num += 1
+                            cam_num = 1
+                        if n == 39:
+                            nvr_num += 1
+                            cam_num = 1
+                        if n == 59:
+                            nvr_num += 1
+                            cam_num = 1
+                        if n == 79:
+                            nvr_num += 1
+                            cam_num = 1
+                        camera['DIRECCION IP'] = f'{self.net}{ip[counter]}'
+                        camera_list.append(camera.copy())
 
-        if camera_list is not None:
-            return(camera_list)
+            if camera_list is not None:
+                return(camera_list)
         else:
             return(False)
-
 
     #-----------------
     #SALA DE SEGURIDAD
@@ -787,7 +788,7 @@ class Tree:
 
                 ccpasc_list.append(ccpasc.copy())
 
-        if ccpasc_list is not None:
+        if ccpasc_list:
             return ccpasc_list
         else:
             return False
